@@ -8,8 +8,8 @@ Alineado con los Objetivos de Desarrollo Sostenible **11** (Ciudades y comunidad
 
 | Integrante | Rol Scrum | Área principal |
 |---|---|---|
-| José José Osvaldo ([@JoseJose7520-dev](https://github.com/JoseJose7520-dev)) | Product Owner y Developer | Frontend React, módulo de preparación, panel de estadísticas |
-| Ortiz Bautista Josue Ahuitz ([@Mammal117](https://github.com/Mammal117)) | Scrum Master y Developer | API Express, PostgreSQL, mapa, notificaciones, pruebas y despliegue |
+| José José Osvaldo ([@JoseJose7520-dev](https://github.com/JoseJose7520-dev)) | Product Owner y Developer | Frontend completo (React, mapa, preparación, dashboard), tablero y documentación |
+| Ortiz Bautista Josue Ahuitz ([@Mammal117](https://github.com/Mammal117)) | Scrum Master y Developer | Backend completo (API Express, PostgreSQL, notificaciones), pruebas y despliegue |
 
 Docente: Martínez Nieto Adelina.
 
