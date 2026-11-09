@@ -49,3 +49,17 @@ AlertaOax/
 Cada cambio entra a `main` mediante un pull request revisado por el otro integrante. La guía paso a paso está en [CONTRIBUTING.md](CONTRIBUTING.md).
 
 **Definición de Terminado:** el código fue revisado mediante un pull request por el otro integrante, las pruebas se ejecutaron sin errores, se cumplieron los criterios de aceptación y el cambio quedó integrado en `main`.
+
+
+## Cómo ejecutar el frontend en local
+
+Requisito: Node.js 18 o superior.
+
+```
+cd frontend
+npm install
+copy .env.example .env
+npm run dev
+```
+
+La aplicación abre en http://localhost:5173. Con `VITE_MOCK_AUTH=true` en el `.env`, el acceso funciona sin backend. Más detalles en [frontend/README.md](frontend/README.md).
