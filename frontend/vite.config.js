@@ -1,13 +1,14 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
 
+// En desarrollo, las peticiones a /api se reenvían al backend (Express, puerto 3000).
+// En producción, Nginx hace ese mismo proxy inverso (ver figura de arquitectura).
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react()],
   server: {
     port: 5173,
     proxy: {
-      '/api': 'http://localhost:3000',
+      '/api': { target: 'http://localhost:3000', changeOrigin: true },
     },
   },
 })
