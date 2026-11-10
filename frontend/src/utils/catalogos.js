@@ -23,7 +23,7 @@ export const NIVELES = {
   },
   vigilancia: {
     nombre: 'Vigilancia', color: 'VERDE', texto: 'AVISO VERDE · VIGILANCIA',
-    clases: { texto: 'text-riesgo-bajo', fondo: 'bg-riesgo-bajo-fondo', borde: 'border-riesgo-bajo', solido: 'bg-riesgo-bajo' },
+    clases: { texto: 'text-ok-texto', fondo: 'bg-riesgo-bajo-fondo', borde: 'border-riesgo-bajo', solido: 'bg-riesgo-bajo' },
     hex: '#15803D',
   },
 }

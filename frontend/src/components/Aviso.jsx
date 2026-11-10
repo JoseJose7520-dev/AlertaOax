@@ -10,7 +10,7 @@ export default function Aviso({ tipo = 'info', children, className = '' }) {
   return (
     <p
       role={tipo === 'error' ? 'alert' : 'status'}
-      className={`rounded-xl border px-3.5 py-3 text-[15px] leading-snug ${ESTILOS[tipo]} ${className}`}
+      className={`rounded-xl border px-3.5 py-3 text-texto leading-snug ${ESTILOS[tipo]} ${className}`}
     >
       {children}
     </p>

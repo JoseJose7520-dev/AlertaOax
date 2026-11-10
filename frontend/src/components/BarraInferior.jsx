@@ -22,7 +22,7 @@ export default function BarraInferior() {
               to={s.a}
               end={s.exacta}
               className={({ isActive }) =>
-                `flex min-h-13 flex-col items-center justify-center gap-0.5 rounded-xl text-[13px] no-underline ${
+                `flex min-h-13 flex-col items-center justify-center gap-0.5 rounded-xl text-nota no-underline ${
                   isActive ? 'font-bold text-anil' : 'text-tenue hover:text-barro'
                 }`
               }

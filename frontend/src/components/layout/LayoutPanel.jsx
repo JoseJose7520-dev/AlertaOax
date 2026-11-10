@@ -14,16 +14,16 @@ export default function LayoutPanel({ titulo, enlaces }) {
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-arena bg-white px-5 py-3 sm:px-7">
         <div className="flex items-center gap-2.5">
           <Logo />
-          <span className="text-[15px] text-tenue">· {titulo}</span>
+          <span className="text-texto text-tenue">· {titulo}</span>
         </div>
-        <div className="flex items-center gap-3 text-[15px]">
+        <div className="flex items-center gap-3 text-texto">
           {usuario?.rol === 'autoridad' && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-riesgo-bajo-fondo px-2.5 py-1 text-[13px] font-bold text-ok-texto">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-riesgo-bajo-fondo px-2.5 py-1 text-nota font-bold text-ok-texto">
               <Icono nombre="palomita" tam={14} grosor={3} /> Verificada
             </span>
           )}
           <span className="hidden sm:inline">{usuario?.nombre}</span>
-          <button type="button" onClick={cerrarSesion} className="btn-neutro min-h-10 text-[14px]">
+          <button type="button" onClick={cerrarSesion} className="btn-neutro min-h-10 text-nota">
             <Icono nombre="salir" tam={18} /> Salir
           </button>
         </div>

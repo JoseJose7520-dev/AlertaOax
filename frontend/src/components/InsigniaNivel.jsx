@@ -5,7 +5,7 @@ export default function InsigniaNivel({ nivel, className = '' }) {
   const n = NIVELES[nivel] ?? NIVELES.vigilancia
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[13px] font-bold uppercase ${n.clases.fondo} ${n.clases.texto} ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-nota font-bold uppercase ${n.clases.fondo} ${n.clases.texto} ${className}`}
     >
       <span className={`size-2 rounded-full ${n.clases.solido}`} aria-hidden="true" />
       {n.nombre}

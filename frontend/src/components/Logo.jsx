@@ -7,7 +7,7 @@ export default function Logo({ tam = 32, conTexto = true, className = '' }) {
         <path d="M16 14 V18" stroke="#FAF7F2" strokeWidth="2.4" strokeLinecap="round" />
         <circle cx="16" cy="20.6" r="1.3" fill="#FAF7F2" />
       </svg>
-      {conTexto && <span className="text-xl font-bold tracking-tight">AlertaOax</span>}
+      {conTexto && <span className="text-pantalla font-bold tracking-tight">AlertaOax</span>}
     </span>
   )
 }

@@ -10,6 +10,18 @@
 @theme {
   --font-sans: "Atkinson Hyperlegible", system-ui, sans-serif;
 
+  /* Escala tipográfica: solo 5 tamaños en toda la app */
+  --text-nota: 14px;
+  --text-nota--line-height: 1.4;
+  --text-texto: 16px;
+  --text-texto--line-height: 1.5;
+  --text-subtitulo: 18px;
+  --text-subtitulo--line-height: 1.35;
+  --text-pantalla: 22px;
+  --text-pantalla--line-height: 1.25;
+  --text-titular: 28px;
+  --text-titular--line-height: 1.15;
+
   --color-anil: #3B3486;
   --color-anil-oscuro: #2A2566;
   --color-anil-claro: #ECEAF6;
@@ -21,6 +33,10 @@
   --color-hueso: #FAF7F2;
   --color-arena: #E7E0D6;
   --color-arena-oscura: #D8CFC2;
+  /* Bordes de controles (campos, chips, casillas): 3.78:1 sobre blanco, cumple WCAG 1.4.11 */
+  --color-borde: #8C8273;
+  /* Texto de ejemplo en campos: 5.57:1, cumple WCAG 1.4.3 */
+  --color-ejemplo: #6F675C;
   --color-crema: #EFE9E0;
 
   --color-riesgo-critico: #B91C1C;
@@ -49,19 +65,19 @@
 
 @layer components {
   .btn-principal {
-    @apply inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl bg-anil px-5 text-[17px] font-bold text-white no-underline transition hover:bg-anil-oscuro disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl bg-anil px-5 text-subtitulo font-bold text-white no-underline transition hover:bg-anil-oscuro disabled:cursor-not-allowed disabled:opacity-60;
   }
   .btn-secundario {
     @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border-[1.5px] border-anil bg-white px-4 font-bold text-anil no-underline transition hover:bg-anil-suave;
   }
   .btn-neutro {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-[1.5px] border-arena-oscura bg-white px-4 font-bold text-barro no-underline transition hover:bg-crema;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-[1.5px] border-borde bg-white px-4 font-bold text-barro no-underline transition hover:bg-crema;
   }
   .campo {
-    @apply min-h-12 w-full rounded-xl border-[1.5px] border-arena-oscura bg-white px-3.5 text-base text-barro placeholder:text-tenue/70 focus:border-anil;
+    @apply min-h-12 w-full rounded-xl border-[1.5px] border-borde bg-white px-3.5 text-texto text-barro placeholder:text-ejemplo focus:border-anil;
   }
   .etiqueta {
-    @apply flex flex-col gap-1.5 text-[15px] font-bold;
+    @apply flex flex-col gap-1.5 text-texto font-bold;
   }
   .tarjeta {
     @apply rounded-2xl border border-arena bg-white;

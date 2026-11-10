@@ -20,7 +20,7 @@ function Segmentado({ opciones, valor, onCambio, etiqueta }) {
             role="radio"
             aria-checked={activo}
             onClick={() => onCambio(o.valor)}
-            className={`min-h-11 rounded-xl text-base ${activo ? 'bg-white font-bold text-barro shadow-sm' : 'text-tenue'}`}
+            className={`min-h-11 rounded-xl text-texto ${activo ? 'bg-white font-bold text-barro shadow-sm' : 'text-tenue'}`}
           >
             {o.texto}
           </button>
@@ -67,7 +67,8 @@ export default function Acceso() {
           return
         }
       }
-      const u = await iniciarSesion({ correo: form.correo, password: form.password, perfil })
+      // Al iniciar sesión no se pide el perfil: el servidor ya sabe el rol de cada cuenta
+      const u = await iniciarSesion({ correo: form.correo, password: form.password })
       navegar(desde ?? inicioPorRol(u.rol), { replace: true })
     } catch (err) {
       setError(err.message)
@@ -80,7 +81,7 @@ export default function Acceso() {
     <div className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 px-5 py-8">
       <div className="flex flex-col items-start gap-3.5">
         <Logo tam={48} conTexto={false} />
-        <h1 className="text-[28px] leading-tight font-bold">Avisos de emergencia para tu comunidad</h1>
+        <h1 className="text-titular leading-tight font-bold">Avisos de emergencia para tu comunidad</h1>
         <p className="text-tenue">Recibe las alertas de tu región, encuentra albergues y prepara a tu familia.</p>
       </div>
 
@@ -92,18 +93,17 @@ export default function Acceso() {
       />
 
       <form onSubmit={enviar} className="flex flex-col gap-4" noValidate>
-        <fieldset className="flex flex-col gap-2">
-          <legend className="mb-2 text-[15px] font-bold">Soy…</legend>
-          <Segmentado
-            etiqueta="Perfil"
-            valor={perfil}
-            onCambio={setPerfil}
-            opciones={[{ valor: 'ciudadano', texto: 'Ciudadano' }, { valor: 'autoridad', texto: 'Autoridad' }]}
-          />
-          {perfil === 'autoridad' && !esRegistro && (
-            <p className="text-sm text-tenue">El administrador también entra por aquí.</p>
-          )}
-        </fieldset>
+        {esRegistro && (
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-2 text-texto font-bold">Soy…</legend>
+            <Segmentado
+              etiqueta="Perfil"
+              valor={perfil}
+              onCambio={setPerfil}
+              opciones={[{ valor: 'ciudadano', texto: 'Ciudadano' }, { valor: 'autoridad', texto: 'Autoridad' }]}
+            />
+          </fieldset>
+        )}
 
         {esRegistro && (
           <label className="etiqueta">
@@ -126,7 +126,7 @@ export default function Acceso() {
               <option value="" disabled>Elige tu región</option>
               {regiones.map((r) => <option key={r}>{r}</option>)}
             </select>
-            <span className="text-sm font-normal text-tenue">
+            <span className="text-nota font-normal text-tenue">
               {perfil === 'autoridad' ? 'Verás los reportes ciudadanos de esta región.' : 'Solo te llegarán las alertas de esta región.'}
             </span>
           </label>
@@ -146,7 +146,7 @@ export default function Acceso() {
         </button>
       </form>
 
-      <p className="mt-auto rounded-2xl bg-anil-claro px-4 py-3.5 text-sm leading-relaxed text-anil-oscuro">
+      <p className="mt-auto rounded-2xl bg-anil-claro px-4 py-3.5 text-nota leading-relaxed text-anil-oscuro">
         ¿Trabajas en Protección Civil? Crea tu cuenta como <strong>autoridad</strong>. El administrador revisará tu solicitud
         antes de que puedas publicar alertas.
       </p>
