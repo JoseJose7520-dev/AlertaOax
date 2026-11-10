@@ -1,1 +1,75 @@
 @import "tailwindcss";
+
+/*
+  Tema visual de AlertaOax.
+  - Añil (textiles oaxaqueños) para marca y botones.
+  - Barro negro para texto, hueso de fondo.
+  - Los colores del semáforo (riesgo-*) se usan SOLO para niveles de riesgo,
+    nunca en botones ni en la marca: así el rojo siempre significa peligro.
+*/
+@theme {
+  --font-sans: "Atkinson Hyperlegible", system-ui, sans-serif;
+
+  --color-anil: #3B3486;
+  --color-anil-oscuro: #2A2566;
+  --color-anil-claro: #ECEAF6;
+  --color-anil-suave: #F4F3FB;
+
+  --color-barro: #1F1B16;
+  --color-barro-suave: #3D352C;
+  --color-tenue: #5C544A;
+  --color-hueso: #FAF7F2;
+  --color-arena: #E7E0D6;
+  --color-arena-oscura: #D8CFC2;
+  --color-crema: #EFE9E0;
+
+  --color-riesgo-critico: #B91C1C;
+  --color-riesgo-critico-fondo: #FBE9E7;
+  --color-riesgo-alto: #C2410C;
+  --color-riesgo-alto-fondo: #FDEEE4;
+  --color-riesgo-medio: #8A5300;
+  --color-riesgo-medio-fondo: #FDF4DC;
+  --color-riesgo-bajo: #15803D;
+  --color-riesgo-bajo-fondo: #E6F4EA;
+  --color-ok-texto: #0F5F2C;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-hueso text-barro font-sans antialiased;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-anil);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .btn-principal {
+    @apply inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl bg-anil px-5 text-[17px] font-bold text-white no-underline transition hover:bg-anil-oscuro disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-secundario {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border-[1.5px] border-anil bg-white px-4 font-bold text-anil no-underline transition hover:bg-anil-suave;
+  }
+  .btn-neutro {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-[1.5px] border-arena-oscura bg-white px-4 font-bold text-barro no-underline transition hover:bg-crema;
+  }
+  .campo {
+    @apply min-h-12 w-full rounded-xl border-[1.5px] border-arena-oscura bg-white px-3.5 text-base text-barro placeholder:text-tenue/70 focus:border-anil;
+  }
+  .etiqueta {
+    @apply flex flex-col gap-1.5 text-[15px] font-bold;
+  }
+  .tarjeta {
+    @apply rounded-2xl border border-arena bg-white;
+  }
+}
+
+/* Leaflet: que el mapa no tape la barra inferior ni los diálogos */
+.leaflet-container {
+  font-family: inherit;
+  z-index: 0;
+}
