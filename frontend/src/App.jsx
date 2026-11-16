@@ -4,10 +4,15 @@ import LayoutCiudadano from './components/layout/LayoutCiudadano.jsx'
 import LayoutPanel from './components/layout/LayoutPanel.jsx'
 import Acceso from './pages/Acceso.jsx'
 import Pendiente from './pages/Pendiente.jsx'
+import Inicio from './pages/Inicio.jsx'
+import DetalleAlerta from './pages/DetalleAlerta.jsx'
+import PublicarAlerta from './pages/autoridad/PublicarAlerta.jsx'
+import MisAlertas from './pages/autoridad/MisAlertas.jsx'
 import NoEncontrada from './pages/NoEncontrada.jsx'
 
 const MENU_AUTORIDAD = [
   { a: '/autoridad', texto: 'Publicar alerta', icono: 'campana', exacta: true },
+  { a: '/autoridad/alertas', texto: 'Mis alertas', icono: 'lista' },
 ]
 const MENU_ADMIN = [
   { a: '/admin', texto: 'Resumen', icono: 'grafica', exacta: true },
@@ -20,7 +25,8 @@ export default function App() {
 
       <Route element={<RutaProtegida roles={['ciudadano']} />}>
         <Route element={<LayoutCiudadano />}>
-          <Route index element={<Pendiente titulo="Alertas" tarea="AO-204" />} />
+          <Route index element={<Inicio />} />
+          <Route path="alertas/:id" element={<DetalleAlerta />} />
           <Route path="mapa" element={<Pendiente titulo="Mapa" tarea="AO-302" />} />
           <Route path="preparate" element={<Pendiente titulo="Prepárate" tarea="AO-303" />} />
           <Route path="reportar" element={<Pendiente titulo="Reportar" tarea="AO-306" />} />
@@ -29,7 +35,8 @@ export default function App() {
 
       <Route element={<RutaProtegida roles={['autoridad', 'administrador']} />}>
         <Route path="autoridad" element={<LayoutPanel titulo="Panel de autoridad" enlaces={MENU_AUTORIDAD} />}>
-          <Route index element={<Pendiente titulo="Publicar alerta" tarea="AO-203" />} />
+          <Route index element={<PublicarAlerta />} />
+          <Route path="alertas" element={<MisAlertas />} />
         </Route>
       </Route>
 

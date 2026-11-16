@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext.jsx'
 import BarraInferior from '../BarraInferior.jsx'
 import Icono from '../Icono.jsx'
 import Logo from '../Logo.jsx'
+import Notificaciones from '../Notificaciones.jsx'
 
 /** Estructura de la app del ciudadano: encabezado, contenido en una columna y barra inferior. */
 export default function LayoutCiudadano() {
@@ -13,12 +14,13 @@ export default function LayoutCiudadano() {
         <Link to="/" className="text-barro no-underline" aria-label="AlertaOax, inicio">
           <Logo />
         </Link>
-        <div className="flex items-center gap-2">
-          <span className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-arena bg-white px-3.5 text-[15px]">
-            <Icono nombre="ubicacion" tam={18} className="text-anil" />
+        <div className="flex items-center gap-1">
+          <span className="mr-1 inline-flex min-h-11 items-center gap-1 rounded-full border border-arena bg-white px-3 text-nota font-bold">
+            <Icono nombre="ubicacion" tam={16} className="text-anil" />
             <span className="sr-only">Tu región:</span>
             {usuario?.region ?? 'Sin región'}
           </span>
+          <Notificaciones />
           <button
             type="button"
             onClick={cerrarSesion}
