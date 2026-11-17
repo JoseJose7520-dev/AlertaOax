@@ -8,6 +8,9 @@ import Inicio from './pages/Inicio.jsx'
 import DetalleAlerta from './pages/DetalleAlerta.jsx'
 import Mapa from './pages/Mapa.jsx'
 import Preparate from './pages/Preparate.jsx'
+import Reportar from './pages/Reportar.jsx'
+import MisReportes from './pages/MisReportes.jsx'
+import ReportesCiudadanos from './pages/autoridad/ReportesCiudadanos.jsx'
 import PublicarAlerta from './pages/autoridad/PublicarAlerta.jsx'
 import MisAlertas from './pages/autoridad/MisAlertas.jsx'
 import NoEncontrada from './pages/NoEncontrada.jsx'
@@ -15,6 +18,7 @@ import NoEncontrada from './pages/NoEncontrada.jsx'
 const MENU_AUTORIDAD = [
   { a: '/autoridad', texto: 'Publicar alerta', icono: 'campana', exacta: true },
   { a: '/autoridad/alertas', texto: 'Mis alertas', icono: 'lista' },
+  { a: '/autoridad/reportes', texto: 'Reportes ciudadanos', icono: 'usuario' },
 ]
 const MENU_ADMIN = [
   { a: '/admin', texto: 'Resumen', icono: 'grafica', exacta: true },
@@ -31,7 +35,8 @@ export default function App() {
           <Route path="alertas/:id" element={<DetalleAlerta />} />
           <Route path="mapa" element={<Mapa />} />
           <Route path="preparate" element={<Preparate />} />
-          <Route path="reportar" element={<Pendiente titulo="Reportar" tarea="AO-306" />} />
+          <Route path="reportar" element={<Reportar />} />
+          <Route path="reportes" element={<MisReportes />} />
         </Route>
       </Route>
 
@@ -39,6 +44,7 @@ export default function App() {
         <Route path="autoridad" element={<LayoutPanel titulo="Panel de autoridad" enlaces={MENU_AUTORIDAD} />}>
           <Route index element={<PublicarAlerta />} />
           <Route path="alertas" element={<MisAlertas />} />
+          <Route path="reportes" element={<ReportesCiudadanos />} />
         </Route>
       </Route>
 
