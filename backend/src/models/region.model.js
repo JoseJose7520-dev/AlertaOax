@@ -4,3 +4,8 @@ export async function buscarRegionPorNombre(nombre) {
   const { rows } = await consulta('SELECT id, nombre FROM regiones WHERE nombre = $1', [nombre])
   return rows[0] ?? null
 }
+
+export async function listarRegiones() {
+  const { rows } = await consulta('SELECT id, nombre FROM regiones ORDER BY nombre')
+  return rows
+}
