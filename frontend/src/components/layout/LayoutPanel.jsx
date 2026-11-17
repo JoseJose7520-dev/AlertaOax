@@ -9,6 +9,10 @@ import Logo from '../Logo.jsx'
  */
 export default function LayoutPanel({ titulo, enlaces }) {
   const { usuario, cerrarSesion } = useAuth()
+  // El administrador también puede publicar alertas: desde ese panel, le damos un regreso a su resumen
+  const menu = usuario?.rol === 'administrador' && !enlaces.some((e) => e.a === '/admin')
+    ? [...enlaces, { a: '/admin', texto: 'Administración', icono: 'grafica', exacta: true }]
+    : enlaces
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-arena bg-white px-5 py-3 sm:px-7">
@@ -34,7 +38,7 @@ export default function LayoutPanel({ titulo, enlaces }) {
           aria-label={`Menú del ${titulo.toLowerCase()}`}
           className="flex w-full gap-1 overflow-x-auto border-b border-arena bg-white p-3 sm:w-60 sm:flex-col sm:border-r sm:border-b-0 sm:p-4"
         >
-          {enlaces.map((e) => (
+          {menu.map((e) => (
             <NavLink
               key={e.a}
               to={e.a}

@@ -3,7 +3,6 @@ import RutaProtegida from './routes/RutaProtegida.jsx'
 import LayoutCiudadano from './components/layout/LayoutCiudadano.jsx'
 import LayoutPanel from './components/layout/LayoutPanel.jsx'
 import Acceso from './pages/Acceso.jsx'
-import Pendiente from './pages/Pendiente.jsx'
 import Inicio from './pages/Inicio.jsx'
 import DetalleAlerta from './pages/DetalleAlerta.jsx'
 import Mapa from './pages/Mapa.jsx'
@@ -11,6 +10,8 @@ import Preparate from './pages/Preparate.jsx'
 import Reportar from './pages/Reportar.jsx'
 import MisReportes from './pages/MisReportes.jsx'
 import ReportesCiudadanos from './pages/autoridad/ReportesCiudadanos.jsx'
+import Resumen from './pages/admin/Resumen.jsx'
+import Autoridades from './pages/admin/Autoridades.jsx'
 import PublicarAlerta from './pages/autoridad/PublicarAlerta.jsx'
 import MisAlertas from './pages/autoridad/MisAlertas.jsx'
 import NoEncontrada from './pages/NoEncontrada.jsx'
@@ -22,6 +23,8 @@ const MENU_AUTORIDAD = [
 ]
 const MENU_ADMIN = [
   { a: '/admin', texto: 'Resumen', icono: 'grafica', exacta: true },
+  { a: '/admin/autoridades', texto: 'Autoridades', icono: 'escudo' },
+  { a: '/autoridad', texto: 'Publicar alerta', icono: 'campana' },
 ]
 
 export default function App() {
@@ -50,7 +53,8 @@ export default function App() {
 
       <Route element={<RutaProtegida roles={['administrador']} />}>
         <Route path="admin" element={<LayoutPanel titulo="Administración" enlaces={MENU_ADMIN} />}>
-          <Route index element={<Pendiente titulo="Resumen" tarea="AO-402" />} />
+          <Route index element={<Resumen />} />
+          <Route path="autoridades" element={<Autoridades />} />
         </Route>
       </Route>
 
