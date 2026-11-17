@@ -7,6 +7,7 @@ import Pendiente from './pages/Pendiente.jsx'
 import Inicio from './pages/Inicio.jsx'
 import DetalleAlerta from './pages/DetalleAlerta.jsx'
 import Mapa from './pages/Mapa.jsx'
+import Preparate from './pages/Preparate.jsx'
 import PublicarAlerta from './pages/autoridad/PublicarAlerta.jsx'
 import MisAlertas from './pages/autoridad/MisAlertas.jsx'
 import NoEncontrada from './pages/NoEncontrada.jsx'
@@ -29,7 +30,7 @@ export default function App() {
           <Route index element={<Inicio />} />
           <Route path="alertas/:id" element={<DetalleAlerta />} />
           <Route path="mapa" element={<Mapa />} />
-          <Route path="preparate" element={<Pendiente titulo="Prepárate" tarea="AO-303" />} />
+          <Route path="preparate" element={<Preparate />} />
           <Route path="reportar" element={<Pendiente titulo="Reportar" tarea="AO-306" />} />
         </Route>
       </Route>
