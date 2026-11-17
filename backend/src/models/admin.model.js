@@ -59,3 +59,32 @@ export async function validarAutoridad(usuarioId, decision, adminId) {
   )
   return rowCount > 0
 }
+
+/** Listado de usuarios para el administrador, con búsqueda por nombre o correo y filtro por rol. */
+export async function listarUsuarios({ rol = null, buscar = '', pagina = 1, porPagina = 20 }) {
+  const params = []
+  const condiciones = []
+  if (rol) {
+    params.push(rol)
+    condiciones.push(`u.rol = $${params.length}`)
+  }
+  if (buscar) {
+    params.push(`%${buscar.toLowerCase()}%`)
+    condiciones.push(`(LOWER(u.nombre) LIKE $${params.length} OR u.correo LIKE $${params.length})`)
+  }
+  const where = condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : ''
+  const total = await consulta(`SELECT COUNT(*)::int AS total FROM usuarios u ${where}`, params)
+  params.push(porPagina, (pagina - 1) * porPagina)
+  const { rows } = await consulta(
+    `SELECT u.id, u.nombre, u.correo, u.rol, u.activo, u.creado_en, r.nombre AS region,
+            a.estado_validacion, (u.google_sub IS NOT NULL) AS con_google
+     FROM usuarios u
+     LEFT JOIN regiones r    ON r.id = u.region_id
+     LEFT JOIN autoridades a ON a.usuario_id = u.id
+     ${where}
+     ORDER BY u.creado_en DESC
+     LIMIT $${params.length - 1} OFFSET $${params.length}`,
+    params,
+  )
+  return { usuarios: rows, total: total.rows[0].total, pagina, porPagina }
+}

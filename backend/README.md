@@ -33,7 +33,14 @@ El rol administrador no se puede crear desde la API (por seguridad). Se crea as�
 npm run crear-admin -- "Nombre Apellido" correo@ejemplo.com ContraseñaSegura
 ```
 
-Para entrar, el administrador usa el perfil **“Soy autoridad”** en la pantalla de acceso.
+El administrador entra desde la misma pantalla de acceso con su correo y contraseña; la app lo lleva a su panel según su rol.
+
+### Correo de recuperación y acceso con Google (opcional)
+
+- `SMTP_USER`, `SMTP_PASS` y `CORREO_REMITENTE`: cuenta de Gmail con verificación en dos pasos y una **contraseña de aplicación**. Sin ellas, el enlace de recuperación se imprime en la consola del servidor.
+- `APP_URL`: dirección pública del frontend; se usa para armar el enlace del correo.
+- `CONTACTO_WHATSAPP` y `CONTACTO_CORREO`: datos del botón flotante de contacto rápido (si faltan, solo muestra el 911).
+- `GOOGLE_CLIENT_ID`: ID de cliente OAuth (Google Cloud Console → Credenciales). Sin él, el botón de Google no aparece.
 
 ## Estructura
 
@@ -61,6 +68,10 @@ Todas las respuestas de error tienen la forma `{ "mensaje": "..." }`.
 | POST | `/api/auth/register` | Público | Registro de ciudadano o autoridad |
 | POST | `/api/auth/login` | Público | Inicio de sesión; devuelve el token JWT |
 | GET | `/api/auth/me` | Con token | Datos del usuario de la sesión |
+| POST | `/api/auth/google` | Público | Acceso con Google (`credential` de Google Identity Services) |
+| POST | `/api/auth/olvide` | Público | Envía enlace de recuperación (respuesta genérica; 5 por 15 min) |
+| POST | `/api/auth/restablecer` | Público | `{ token, password, confirmarPassword }`; enlace de un solo uso, 30 min |
+| GET | `/api/config` | Público | Configuración pública del frontend (`googleClientId`, `contacto`) |
 | POST | `/api/alerts/publish` | Autoridad aprobada, admin | Publica una alerta y notifica a la región (transacción) |
 | GET | `/api/alerts/active` | Con token | Alertas vigentes de la región del usuario (`?todas=1`: todo Oaxaca) |
 | GET | `/api/alerts/mine` | Autoridad, admin | Alertas que publicó, con número de notificados |
@@ -77,23 +88,25 @@ Todas las respuestas de error tienen la forma `{ "mensaje": "..." }`.
 | PATCH | `/api/reports/:id/estado` | Autoridad de la región, admin | Cambia a `en_atencion` o `atendido`, con nota opcional |
 | GET / PUT | `/api/plan` | Ciudadano | Plan familiar y mochila de emergencia |
 | GET | `/api/admin/metrics` | Admin | Conteos para el panel estadístico |
+| GET | `/api/admin/users?rol=&buscar=&pagina=` | Admin | Lista paginada de cuentas (20 por página) |
 | GET | `/api/admin/authorities?estado=pendiente` | Admin | Solicitudes de autoridad |
 | PUT | `/api/admin/authorities/:id/validate` | Admin | `{ "decision": "aprobada" \| "rechazada" }` |
 
 ### POST /api/auth/register
 
 ```json
-{ "nombre": "Ana Pérez", "correo": "ana@correo.com", "password": "secreto1",
-  "region": "Valles Centrales", "perfil": "ciudadano" }
+{ "nombre": "Ana Pérez", "correo": "ana@correo.com", "password": "secreto12",
+  "confirmarPassword": "secreto12", "region": "Valles Centrales",
+  "perfil": "ciudadano", "aceptaTerminos": true }
 ```
 
-Para `perfil: "autoridad"` se agrega `"institucion"`. La cuenta de autoridad queda **pendiente**
+La contraseña debe tener de 8 a 72 caracteres y `aceptaTerminos` es obligatorio. Para `perfil: "autoridad"` se agrega `"institucion"`. La cuenta de autoridad queda **pendiente**
 hasta que el administrador la valide (AO-401); respuesta `201`: `{ "pendiente": true, "mensaje": "..." }`.
 
 ### POST /api/auth/login
 
 ```json
-{ "correo": "ana@correo.com", "password": "secreto1", "perfil": "ciudadano" }
+{ "correo": "ana@correo.com", "password": "secreto12" }
 ```
 
 Respuesta `200`: `{ "token": "...", "usuario": { "id", "nombre", "correo", "rol", "region" } }`.
@@ -112,5 +125,7 @@ router.post('/publish', verificarToken, verificarRol('autoridad', 'administrador
 
 - Contraseñas con bcrypt (`bcryptjs`, costo 10); nunca se guardan en texto plano.
 - Mismo mensaje para correo inexistente y contraseña errónea (no revela qué cuentas existen).
+- Recuperación: token aleatorio de 32 bytes; en la base solo se guarda su SHA-256; caduca en 30 minutos y se usa una vez.
+- Honeypot anti-spam: registro y «olvidé mi contraseña» rechazan envíos que llenan el campo oculto `sitio_web`.
 - Límite de 30 intentos por 15 minutos en registro y login.
 - `JWT_SECRET` obligatorio (mínimo 16 caracteres) y `.env` fuera de Git.

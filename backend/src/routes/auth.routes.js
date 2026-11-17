@@ -2,7 +2,8 @@ import { Router } from 'express'
 import rateLimit from 'express-rate-limit'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { verificarToken } from '../middlewares/verificarToken.js'
-import { iniciarSesion, perfilActual, registrar } from '../controllers/auth.controller.js'
+import { bloquearBots } from '../middlewares/antiSpam.js'
+import { accesoGoogle, iniciarSesion, olvidePassword, perfilActual, registrar, restablecerPassword } from '../controllers/auth.controller.js'
 
 const router = Router()
 
@@ -15,7 +16,19 @@ const limitarIntentos = rateLimit({
   message: { mensaje: 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.' },
 })
 
-router.post('/register', limitarIntentos, asyncHandler(registrar))
+// Evita usar "olvidé mi contraseña" para mandar correos masivos
+const limitarCorreos = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { mensaje: 'Ya pediste varios enlaces. Espera 15 minutos e inténtalo de nuevo.' },
+})
+
+router.post('/register', limitarIntentos, bloquearBots, asyncHandler(registrar))
+router.post('/google', limitarIntentos, asyncHandler(accesoGoogle))
+router.post('/olvide', limitarCorreos, bloquearBots, asyncHandler(olvidePassword))
+router.post('/restablecer', limitarIntentos, asyncHandler(restablecerPassword))
 router.post('/login', limitarIntentos, asyncHandler(iniciarSesion))
 router.get('/me', verificarToken, asyncHandler(perfilActual))
 

@@ -141,3 +141,23 @@ CREATE INDEX IF NOT EXISTS idx_albergues_region ON albergues (region_id);
 CREATE INDEX IF NOT EXISTS idx_zonas_region     ON zonas_riesgo (region_id);
 CREATE INDEX IF NOT EXISTS idx_reportes_region  ON reportes (region_id, estado);
 CREATE INDEX IF NOT EXISTS idx_reportes_usuario ON reportes (usuario_id);
+
+-- ============================================================
+-- AO-406: acceso con Google, términos y recuperación de contraseña
+-- ============================================================
+
+-- Identificador de la cuenta de Google (solo si la persona entra con Google)
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS google_sub VARCHAR(64) UNIQUE;
+-- Momento en que la persona aceptó los Términos y el Aviso de Privacidad
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS terminos_aceptados_en TIMESTAMPTZ;
+
+-- Enlaces para crear una nueva contraseña. Se guarda el hash SHA-256 del token, nunca el token.
+CREATE TABLE IF NOT EXISTS recuperaciones (
+  id          SERIAL PRIMARY KEY,
+  usuario_id  INTEGER     NOT NULL REFERENCES usuarios (id) ON DELETE CASCADE,
+  token_hash  CHAR(64)    NOT NULL UNIQUE,
+  expira_en   TIMESTAMPTZ NOT NULL,
+  usada_en    TIMESTAMPTZ,
+  creada_en   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_recuperaciones_usuario ON recuperaciones (usuario_id);
