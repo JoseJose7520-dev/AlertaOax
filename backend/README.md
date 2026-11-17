@@ -17,10 +17,12 @@ Luego crea la base y las tablas, y arranca la API:
 
 ```
 npm run db:init
+npm run db:ejemplo
 npm run dev
 ```
 
 `db:init` crea la base `alertaoax` si no existe y ejecuta `../database/schema.sql`. Se puede repetir sin duplicar datos.
+`db:ejemplo` carga albergues y zonas de riesgo **de ejemplo** (`../database/seed-ejemplo.sql`) para probar el mapa; no son datos oficiales.
 La API queda en http://localhost:3000. Prueba: http://localhost:3000/api/health
 
 ### Crear un administrador
@@ -45,7 +47,7 @@ src/
 ├── utils/         ErrorHttp y asyncHandler
 ├── app.js         Configuración de Express
 └── server.js      Arranque del servidor
-scripts/           init-db.js y crear-admin.js
+scripts/           init-db.js, cargar-ejemplo.js y crear-admin.js
 ```
 
 ## Endpoints
@@ -55,9 +57,28 @@ Todas las respuestas de error tienen la forma `{ "mensaje": "..." }`.
 | Método | Ruta | Acceso | Descripción |
 |---|---|---|---|
 | GET | `/api/health` | Público | Estado de la API y de la base de datos |
+| GET | `/api/regions` | Público | Las 8 regiones de Oaxaca |
 | POST | `/api/auth/register` | Público | Registro de ciudadano o autoridad |
 | POST | `/api/auth/login` | Público | Inicio de sesión; devuelve el token JWT |
 | GET | `/api/auth/me` | Con token | Datos del usuario de la sesión |
+| POST | `/api/alerts/publish` | Autoridad aprobada, admin | Publica una alerta y notifica a la región (transacción) |
+| GET | `/api/alerts/active` | Con token | Alertas vigentes de la región del usuario (`?todas=1`: todo Oaxaca) |
+| GET | `/api/alerts/mine` | Autoridad, admin | Alertas que publicó, con número de notificados |
+| GET | `/api/alerts/:id` | Con token | Detalle de una alerta |
+| PATCH | `/api/alerts/:id/finalizar` | Autor o admin | Termina la alerta antes de tiempo |
+| GET | `/api/notifications` | Con token | Notificaciones del usuario y cuántas no ha leído |
+| PATCH | `/api/notifications/:id/leida` | Con token | Marca una notificación como leída |
+| PATCH | `/api/notifications/leer-todas` | Con token | Marca todas como leídas |
+| GET | `/api/shelters?region=Costa` | Con token | Albergues abiertos (`region=todas` para todo Oaxaca) |
+| GET | `/api/risk-zones?region=Costa` | Con token | Zonas de riesgo (círculo: centro y radio) |
+| POST | `/api/reports` | Ciudadano | Reporte de incidencia (estado inicial `recibido`) |
+| GET | `/api/reports/mine` | Ciudadano | Reportes propios con su estado |
+| GET | `/api/reports?estado=recibido` | Autoridad, admin | Reportes de la región de la autoridad |
+| PATCH | `/api/reports/:id/estado` | Autoridad de la región, admin | Cambia a `en_atencion` o `atendido`, con nota opcional |
+| GET / PUT | `/api/plan` | Ciudadano | Plan familiar y mochila de emergencia |
+| GET | `/api/admin/metrics` | Admin | Conteos para el panel estadístico |
+| GET | `/api/admin/authorities?estado=pendiente` | Admin | Solicitudes de autoridad |
+| PUT | `/api/admin/authorities/:id/validate` | Admin | `{ "decision": "aprobada" \| "rechazada" }` |
 
 ### POST /api/auth/register
 

@@ -7,6 +7,7 @@ import notificacionRoutes from './notificacion.routes.js'
 import mapaRoutes from './mapa.routes.js'
 import reporteRoutes from './reporte.routes.js'
 import planRoutes from './plan.routes.js'
+import adminRoutes from './admin.routes.js'
 
 const router = Router()
 
@@ -18,5 +19,6 @@ router.use('/notifications', notificacionRoutes)
 router.use('/', mapaRoutes) // /shelters y /risk-zones
 router.use('/reports', reporteRoutes)
 router.use('/plan', planRoutes)
+router.use('/admin', adminRoutes)
 
 export default router
