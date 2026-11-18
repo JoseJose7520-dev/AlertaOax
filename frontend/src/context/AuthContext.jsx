@@ -31,9 +31,18 @@ export function AuthProvider({ children }) {
 
   const registrar = useCallback((datos) => api.post('/auth/register', datos), [])
 
+  /** Acceso con Google. Si la cuenta es nueva devuelve { registroPendiente, nombre, correo } sin iniciar sesión. */
+  const accesoGoogle = useCallback(async (credential, extra = {}) => {
+    const r = await api.post('/auth/google', { credential, ...extra })
+    if (r.registroPendiente) return r
+    sesion.guardar(r.token)
+    setUsuario(r.usuario)
+    return r
+  }, [])
+
   const valor = useMemo(
-    () => ({ usuario, cargando, iniciarSesion, registrar, cerrarSesion }),
-    [usuario, cargando, iniciarSesion, registrar, cerrarSesion],
+    () => ({ usuario, cargando, iniciarSesion, registrar, accesoGoogle, cerrarSesion }),
+    [usuario, cargando, iniciarSesion, registrar, accesoGoogle, cerrarSesion],
   )
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>
 }

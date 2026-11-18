@@ -1,91 +1,275 @@
 @import "tailwindcss";
 
 /*
-  Tema visual de AlertaOax.
-  - Añil (textiles oaxaqueños) para marca y botones.
-  - Barro negro para texto, hueso de fondo.
-  - Los colores del semáforo (riesgo-*) se usan SOLO para niveles de riesgo,
-    nunca en botones ni en la marca: así el rojo siempre significa peligro.
+  Tema visual de AlertaOax: «Radar topográfico / Sala de situación».
+  - Dos temas: diurno de alto contraste y nocturno operativo. Se elige con el botón Sol/Luna
+    (atributo data-tema en <html>); por defecto sigue la configuración del sistema.
+  - Acento institucional: azul cobalto con degradado a cian, solo para acciones y navegación.
+  - El semáforo (riesgo-*) se usa SOLO para niveles de riesgo y siempre va con texto e ícono.
+  Los colores se definen como variables y Tailwind los usa con nombres de rol (fondo, superficie, tinta…).
 */
-@theme {
-  --font-sans: "Atkinson Hyperlegible", system-ui, sans-serif;
+@custom-variant dark (&:where([data-tema="oscuro"], [data-tema="oscuro"] *));
 
-  /* Escala tipográfica: solo 5 tamaños en toda la app */
+:root {
+  --fondo: #EEF2F6;
+  --superficie: #FFFFFF;
+  --superficie-vidrio: rgb(255 255 255 / 0.78);
+  --hundido: #E4EAF1;
+  --linea: #D6DEE8;
+  --linea-fuerte: #B8C4D3;
+  /* Bordes de controles: 3.4:1 sobre blanco (WCAG 1.4.11) */
+  --borde: #7D8BA0;
+  --tinta: #0B1220;
+  --tinta-suave: #2B3647;
+  --tenue: #4A5568;
+  /* Texto de ejemplo en campos: 4.8:1 */
+  --ejemplo: #5F6B7C;
+
+  --acento: #2563EB;
+  --acento-fuerte: #1D4ED8;
+  --acento-claro: #DBE7FE;
+  --acento-suave: #EEF4FF;
+  --cian: #0891B2;
+  --sobre-acento: #FFFFFF;
+
+  --riesgo-critico: #DC2626;
+  --riesgo-critico-texto: #B91C1C;
+  --riesgo-critico-fondo: #FEE7E7;
+  --riesgo-alto: #EA580C;
+  --riesgo-alto-texto: #C2410C;
+  --riesgo-alto-fondo: #FFEDDF;
+  --riesgo-medio: #D97706;
+  --riesgo-medio-texto: #92400E;
+  --riesgo-medio-fondo: #FEF3D7;
+  --riesgo-bajo: #059669;
+  --riesgo-bajo-texto: #047857;
+  --riesgo-bajo-fondo: #DCF5EA;
+
+  --sombra: 0 1px 2px rgb(15 23 42 / 0.06), 0 8px 24px -12px rgb(15 23 42 / 0.18);
+  --topo-opacidad: 0.22;
+  color-scheme: light;
+}
+
+[data-tema="oscuro"] {
+  --fondo: #0B1120;
+  --superficie: #131C31;
+  --superficie-vidrio: rgb(19 28 49 / 0.72);
+  --hundido: #0F1729;
+  --linea: #1E293B;
+  --linea-fuerte: #2C3A52;
+  --borde: #64748B;
+  --tinta: #E8EEF7;
+  --tinta-suave: #CBD5E1;
+  --tenue: #9AA8BC;
+  --ejemplo: #8492A8;
+
+  --acento: #3B82F6;
+  --acento-fuerte: #93C5FD;
+  --acento-claro: #1B2B4F;
+  --acento-suave: #16223D;
+  --cian: #22D3EE;
+  --sobre-acento: #FFFFFF;
+
+  --riesgo-critico: #DC2626;
+  --riesgo-critico-texto: #FCA5A5;
+  --riesgo-critico-fondo: #3A1218;
+  --riesgo-alto: #F97316;
+  --riesgo-alto-texto: #FDBA74;
+  --riesgo-alto-fondo: #3A1F0E;
+  --riesgo-medio: #F59E0B;
+  --riesgo-medio-texto: #FCD34D;
+  --riesgo-medio-fondo: #352806;
+  --riesgo-bajo: #10B981;
+  --riesgo-bajo-texto: #6EE7B7;
+  --riesgo-bajo-fondo: #0D2E25;
+
+  --sombra: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 12px 32px -16px rgb(0 0 0 / 0.7);
+  --topo-opacidad: 0.16;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: "Inter Variable", "Inter", system-ui, sans-serif;
+  --font-display: "Space Grotesk Variable", "Space Grotesk", "Inter Variable", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Escala tipográfica: 5 tamaños de lectura + uno de cifras */
   --text-nota: 14px;
   --text-nota--line-height: 1.4;
   --text-texto: 16px;
   --text-texto--line-height: 1.5;
   --text-subtitulo: 18px;
   --text-subtitulo--line-height: 1.35;
-  --text-pantalla: 22px;
-  --text-pantalla--line-height: 1.25;
-  --text-titular: 28px;
-  --text-titular--line-height: 1.15;
+  --text-pantalla: 24px;
+  --text-pantalla--line-height: 1.2;
+  --text-titular: 30px;
+  --text-titular--line-height: 1.1;
+  --text-cifra: 40px;
+  --text-cifra--line-height: 1;
 
-  --color-anil: #3B3486;
-  --color-anil-oscuro: #2A2566;
-  --color-anil-claro: #ECEAF6;
-  --color-anil-suave: #F4F3FB;
+  --color-fondo: var(--fondo);
+  --color-superficie: var(--superficie);
+  --color-hundido: var(--hundido);
+  --color-linea: var(--linea);
+  --color-linea-fuerte: var(--linea-fuerte);
+  --color-borde: var(--borde);
+  --color-tinta: var(--tinta);
+  --color-tinta-suave: var(--tinta-suave);
+  --color-tenue: var(--tenue);
+  --color-ejemplo: var(--ejemplo);
+  --color-acento: var(--acento);
+  --color-acento-fuerte: var(--acento-fuerte);
+  --color-acento-claro: var(--acento-claro);
+  --color-acento-suave: var(--acento-suave);
+  --color-cian: var(--cian);
+  --color-sobre-acento: var(--sobre-acento);
+  --color-abisal: #0B1120;
 
-  --color-barro: #1F1B16;
-  --color-barro-suave: #3D352C;
-  --color-tenue: #5C544A;
-  --color-hueso: #FAF7F2;
-  --color-arena: #E7E0D6;
-  --color-arena-oscura: #D8CFC2;
-  /* Bordes de controles (campos, chips, casillas): 3.78:1 sobre blanco, cumple WCAG 1.4.11 */
-  --color-borde: #8C8273;
-  /* Texto de ejemplo en campos: 5.57:1, cumple WCAG 1.4.3 */
-  --color-ejemplo: #6F675C;
-  --color-crema: #EFE9E0;
+  --color-riesgo-critico: var(--riesgo-critico);
+  --color-riesgo-critico-texto: var(--riesgo-critico-texto);
+  --color-riesgo-critico-fondo: var(--riesgo-critico-fondo);
+  --color-riesgo-alto: var(--riesgo-alto);
+  --color-riesgo-alto-texto: var(--riesgo-alto-texto);
+  --color-riesgo-alto-fondo: var(--riesgo-alto-fondo);
+  --color-riesgo-medio: var(--riesgo-medio);
+  --color-riesgo-medio-texto: var(--riesgo-medio-texto);
+  --color-riesgo-medio-fondo: var(--riesgo-medio-fondo);
+  --color-riesgo-bajo: var(--riesgo-bajo);
+  --color-riesgo-bajo-texto: var(--riesgo-bajo-texto);
+  --color-riesgo-bajo-fondo: var(--riesgo-bajo-fondo);
+  --color-ok-texto: var(--riesgo-bajo-texto);
 
-  --color-riesgo-critico: #B91C1C;
-  --color-riesgo-critico-fondo: #FBE9E7;
-  --color-riesgo-alto: #C2410C;
-  --color-riesgo-alto-fondo: #FDEEE4;
-  --color-riesgo-medio: #8A5300;
-  --color-riesgo-medio-fondo: #FDF4DC;
-  --color-riesgo-bajo: #15803D;
-  --color-riesgo-bajo-fondo: #E6F4EA;
-  --color-ok-texto: #0F5F2C;
+  --shadow-tarjeta: var(--sombra);
 }
 
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
+    scroll-padding-top: 7rem;
   }
   body {
-    @apply bg-hueso text-barro font-sans antialiased;
+    @apply bg-fondo font-sans text-tinta antialiased;
+    padding-top: 2rem; /* franja fija del 911 (Banda911) */
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  h1, h2, h3 {
+    @apply font-display tracking-tight;
   }
   :focus-visible {
-    outline: 3px solid var(--color-anil);
+    outline: 3px solid var(--acento);
     outline-offset: 2px;
+  }
+  a {
+    color: var(--acento);
+  }
+  [data-tema="oscuro"] a {
+    color: var(--acento-fuerte);
   }
 }
 
 @layer components {
   .btn-principal {
-    @apply inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl bg-anil px-5 text-subtitulo font-bold text-white no-underline transition hover:bg-anil-oscuro disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl px-5 font-display text-subtitulo font-bold text-white no-underline shadow-[0_8px_20px_-10px_rgb(37_99_235/0.8)] transition hover:brightness-110 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-55 disabled:shadow-none;
+    background-image: linear-gradient(110deg, #2563EB 0%, #1D4ED8 45%, #0891B2 100%);
+    color: #fff !important;
   }
   .btn-secundario {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border-[1.5px] border-anil bg-white px-4 font-bold text-anil no-underline transition hover:bg-anil-suave;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border-[1.5px] border-acento bg-superficie px-4 font-bold text-acento no-underline transition hover:bg-acento-suave dark:text-acento-fuerte;
   }
   .btn-neutro {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-[1.5px] border-borde bg-white px-4 font-bold text-barro no-underline transition hover:bg-crema;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-[1.5px] border-linea-fuerte bg-superficie px-4 font-bold text-tinta no-underline transition hover:border-borde hover:bg-hundido;
   }
   .campo {
-    @apply min-h-12 w-full rounded-xl border-[1.5px] border-borde bg-white px-3.5 text-texto text-barro placeholder:text-ejemplo focus:border-anil;
+    @apply min-h-12 w-full rounded-xl border-[1.5px] border-borde/70 bg-superficie px-3.5 text-texto text-tinta transition placeholder:text-ejemplo focus:border-acento focus:outline-none focus:ring-4 focus:ring-acento/15;
   }
   .etiqueta {
-    @apply flex flex-col gap-1.5 text-texto font-bold;
+    @apply flex flex-col gap-1.5 text-texto font-semibold;
   }
   .tarjeta {
-    @apply rounded-2xl border border-arena bg-white;
+    @apply rounded-2xl border border-linea bg-superficie shadow-tarjeta;
   }
+  /* Tarjeta con efecto cristal esmerilado (sobre fondos con textura) */
+  .vidrio {
+    @apply rounded-2xl border border-linea shadow-tarjeta;
+    background-color: var(--superficie-vidrio);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+  }
+  /* Etiqueta pequeña en mayúsculas estilo consola */
+  .rotulo {
+    @apply font-mono text-[12px] font-semibold tracking-[0.08em] uppercase;
+  }
+  .chip {
+    @apply inline-flex min-h-10 items-center gap-1.5 rounded-full border-[1.5px] border-linea-fuerte bg-superficie px-3.5 text-nota font-semibold text-tinta-suave transition hover:border-borde;
+  }
+  .chip-activo {
+    @apply border-transparent bg-acento text-white hover:border-transparent;
+  }
+  /* Contenedor de ícono duotono con color */
+  .icono-caja {
+    @apply inline-flex shrink-0 items-center justify-center rounded-xl;
+  }
+}
+
+@layer components { /* en components para que sticky/absolute de Tailwind ganen */
+  /* Textura de curvas de nivel */
+  .topografia {
+    position: relative;
+    isolation: isolate;
+  }
+  .topografia::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: url("./assets/topografia.svg");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: var(--topo-opacidad);
+  }
+  .topografia-clara::before {
+    opacity: 0.35;
+    filter: brightness(1.6);
+  }
+}
+
+/* Halo pulsante para la alerta roja (se desactiva si la persona pide menos movimiento) */
+@keyframes halo {
+  0% { box-shadow: 0 0 0 0 rgb(220 38 38 / 0.45); }
+  70% { box-shadow: 0 0 0 14px rgb(220 38 38 / 0); }
+  100% { box-shadow: 0 0 0 0 rgb(220 38 38 / 0); }
+}
+.halo-critico {
+  animation: halo 2.2s ease-out infinite;
+}
+@keyframes onda-radar {
+  from { transform: scale(0.3); opacity: 0.7; }
+  to { transform: scale(1); opacity: 0; }
+}
+.onda-radar {
+  animation: onda-radar 3.6s ease-out infinite;
+  transform-origin: center;
+}
+@keyframes barrido-radar { to { transform: rotate(360deg); } }
+.barrido-radar { animation: barrido-radar 4s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .halo-critico, .onda-radar, .barrido-radar { animation: none; }
 }
 
 /* Leaflet: que el mapa no tape la barra inferior ni los diálogos */
 .leaflet-container {
   font-family: inherit;
   z-index: 0;
+  background: var(--hundido);
+}
+/* Mapa nocturno: se oscurecen los mosaicos de OpenStreetMap */
+[data-tema="oscuro"] .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(195deg) brightness(0.95) contrast(0.9) saturate(0.55);
+}
+[data-tema="oscuro"] .leaflet-control-attribution,
+[data-tema="oscuro"] .leaflet-bar a {
+  background: #131C31;
+  color: #CBD5E1;
 }

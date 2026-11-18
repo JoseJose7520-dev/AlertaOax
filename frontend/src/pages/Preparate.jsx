@@ -9,50 +9,50 @@ import Cargando from '../components/Cargando.jsx'
 import Icono from '../components/Icono.jsx'
 
 const PESTANAS = [
-  { id: 'guias', texto: 'Guías' },
-  { id: 'mochila', texto: 'Mochila' },
-  { id: 'plan', texto: 'Plan familiar' },
+  { id: 'guias', texto: 'Guías', icono: 'documento' },
+  { id: 'mochila', texto: 'Mochila', icono: 'mochila' },
+  { id: 'plan', texto: 'Plan familiar', icono: 'comunidad' },
+]
+
+const ETAPAS = [
+  { clave: 'antes', titulo: 'Antes', icono: 'antes', clases: 'bg-acento-claro text-acento dark:text-acento-fuerte', borde: 'border-t-acento' },
+  { clave: 'durante', titulo: 'Durante', icono: 'durante', clases: 'bg-riesgo-alto-fondo text-riesgo-alto-texto', borde: 'border-t-riesgo-alto' },
+  { clave: 'despues', titulo: 'Después', icono: 'despues', clases: 'bg-riesgo-bajo-fondo text-ok-texto', borde: 'border-t-riesgo-bajo' },
 ]
 
 function Guias() {
-  const [abierta, setAbierta] = useState(null)
+  const [actual, setActual] = useState(GUIAS[0].id)
+  const g = GUIAS.find((x) => x.id === actual)
   return (
-    <div className="flex flex-col gap-3">
-      <p className="text-barro-suave">Elige un fenómeno para ver qué hacer antes, durante y después.</p>
-      {GUIAS.map((g) => {
-        const activa = abierta === g.id
-        return (
-          <section key={g.id} className="tarjeta overflow-hidden">
-            <button
-              type="button"
-              aria-expanded={activa}
-              onClick={() => setAbierta(activa ? null : g.id)}
-              className="flex min-h-19 w-full items-center gap-3.5 p-4 text-left"
-            >
-              <span className="flex size-12 items-center justify-center rounded-2xl bg-anil-claro text-anil">
-                <Icono nombre={g.id} tam={26} />
-              </span>
-              <span className="flex flex-1 flex-col">
-                <span className="text-subtitulo font-bold">{g.nombre}</span>
-                <span className="text-nota text-tenue">{g.resumen}</span>
-              </span>
-              <Icono nombre="derecha" tam={20} className={`text-tenue transition ${activa ? 'rotate-90' : ''}`} />
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4" role="group" aria-label="Elige un fenómeno">
+        {GUIAS.map((x) => {
+          const activo = x.id === actual
+          return (
+            <button key={x.id} type="button" aria-pressed={activo} onClick={() => setActual(x.id)}
+              className={`flex items-center gap-2.5 rounded-2xl border-2 p-3 text-left transition ${activo ? 'border-acento bg-acento-suave' : 'border-linea bg-superficie hover:border-borde'}`}>
+              <span className={`icono-caja size-10 ${activo ? 'bg-acento text-white' : 'bg-acento-claro text-acento dark:text-acento-fuerte'}`}><Icono nombre={x.id} tam={24} peso={activo ? 'fill' : 'duotone'} /></span>
+              <span className="font-bold">{x.nombre}</span>
             </button>
-            {activa && (
-              <div className="flex flex-col gap-4 border-t border-arena p-4">
-                {[['Antes', g.antes], ['Durante', g.durante], ['Después', g.despues]].map(([titulo, pasos]) => (
-                  <div key={titulo} className="flex flex-col gap-2">
-                    <h3 className="font-bold text-anil">{titulo}</h3>
-                    <ul className="flex list-disc flex-col gap-1.5 pl-5 leading-snug">
-                      {pasos.map((p) => <li key={p}>{p}</li>)}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            )}
+          )
+        })}
+      </div>
+      <p className="text-tinta-suave">{g.resumen}</p>
+      <div className="grid gap-3 md:grid-cols-3">
+        {ETAPAS.map((e) => (
+          <section key={e.clave} className={`tarjeta flex flex-col gap-3 border-t-4 p-4 ${e.borde}`}>
+            <h3 className="flex items-center gap-2.5 text-subtitulo font-bold">
+              <span className={`icono-caja size-10 ${e.clases}`}><Icono nombre={e.icono} tam={22} /></span>
+              {e.titulo}
+            </h3>
+            <ul className="flex flex-col gap-2 leading-snug">
+              {g[e.clave].map((p) => (
+                <li key={p} className="flex items-start gap-2"><Icono nombre="palomita" tam={18} peso="bold" className="mt-0.5 text-ok-texto" />{p}</li>
+              ))}
+            </ul>
           </section>
-        )
-      })}
+        ))}
+      </div>
     </div>
   )
 }
@@ -63,15 +63,15 @@ function Mochila({ marcados, alternar, guardando }) {
     <div className="flex flex-col gap-3">
       <section className="tarjeta flex flex-col gap-2.5 p-4">
         <div className="flex items-baseline justify-between">
-          <h2 className="text-subtitulo font-bold">Tu mochila de emergencia</h2>
-          <span className="font-bold text-anil">{hechos} de {MOCHILA.length}</span>
+          <h2 className="flex items-center gap-2 text-subtitulo font-bold"><Icono nombre="mochila" tam={24} className="text-acento dark:text-acento-fuerte" /> Tu mochila de emergencia</h2>
+          <span className="font-display text-pantalla font-bold">{hechos}<span className="text-texto text-tenue"> de {MOCHILA.length}</span></span>
         </div>
-        <div className="h-2.5 overflow-hidden rounded-full bg-crema" role="progressbar" aria-valuemin={0} aria-valuemax={MOCHILA.length} aria-valuenow={hechos} aria-label="Avance de la mochila">
-          <div className="h-full rounded-full bg-anil transition-all" style={{ width: `${(hechos / MOCHILA.length) * 100}%` }} />
+        <div className="h-2.5 overflow-hidden rounded-full bg-hundido" role="progressbar" aria-valuemin={0} aria-valuemax={MOCHILA.length} aria-valuenow={hechos} aria-label="Avance de la mochila">
+          <div className="h-full rounded-full transition-all" style={{ width: `${(hechos / MOCHILA.length) * 100}%`, backgroundImage: 'linear-gradient(90deg,#2563EB,#0891B2)' }} />
         </div>
         <p className="text-nota text-tenue">Debe alcanzar para 72 horas. Revísala cada 6 meses. {guardando && '· Guardando…'}</p>
       </section>
-      <ul className="flex flex-col gap-2">
+      <ul className="grid gap-2 sm:grid-cols-2">
         {MOCHILA.map((m) => {
           const ok = marcados.includes(m.id)
           return (
@@ -81,14 +81,15 @@ function Mochila({ marcados, alternar, guardando }) {
                 role="checkbox"
                 aria-checked={ok}
                 onClick={() => alternar(m.id)}
-                className={`flex min-h-15 w-full items-center gap-3.5 rounded-2xl border px-3.5 py-3 text-left ${ok ? 'border-[#C9C3EA] bg-anil-suave' : 'border-arena bg-white'}`}
+                className={`flex min-h-16 w-full items-center gap-3 rounded-2xl border-2 px-3.5 py-3 text-left transition ${ok ? 'border-acento/60 bg-acento-suave' : 'border-linea bg-superficie hover:border-borde'}`}
               >
-                <span className={`flex size-6.5 items-center justify-center rounded-lg border-2 ${ok ? 'border-anil bg-anil text-white' : 'border-[#8C8273] bg-white'}`}>
-                  {ok && <Icono nombre="palomita" tam={16} grosor={3} />}
-                </span>
-                <span className="flex flex-col">
+                <span className={`icono-caja size-11 ${ok ? 'bg-acento text-white' : 'bg-hundido text-tenue'}`}><Icono nombre={m.id} tam={24} peso={ok ? 'fill' : 'duotone'} /></span>
+                <span className="flex flex-1 flex-col">
                   <span className="font-bold">{m.nombre}</span>
                   <span className="text-nota text-tenue">{m.detalle}</span>
+                </span>
+                <span className={`flex size-6.5 shrink-0 items-center justify-center rounded-lg border-2 ${ok ? 'border-acento bg-acento text-white' : 'border-borde bg-superficie'}`}>
+                  {ok && <Icono nombre="palomita" tam={16} peso="bold" />}
                 </span>
               </button>
             </li>
@@ -124,8 +125,9 @@ function PlanFamiliar({ plan, albergues, guardar }) {
   }
 
   return (
-    <form onSubmit={enviar} className="flex flex-col gap-4">
-      <p className="text-barro-suave">Acuerden en familia qué hacer. Se guarda en tu cuenta.</p>
+    <form onSubmit={enviar} className="tarjeta flex flex-col gap-4 p-4 sm:p-5">
+      <p className="flex items-center gap-2 text-tinta-suave"><Icono nombre="comunidad" tam={22} className="text-acento dark:text-acento-fuerte" /> Acuerden en familia qué hacer. Se guarda en tu cuenta.</p>
+      <div className="grid gap-4 sm:grid-cols-2">
       <label className="etiqueta">
         Punto de reunión
         <input className="campo font-normal" maxLength={250} placeholder="Ej. Parque central, frente a la iglesia" value={form.puntoReunion} onChange={cambiar('puntoReunion')} />
@@ -138,13 +140,14 @@ function PlanFamiliar({ plan, albergues, guardar }) {
         </select>
       </label>
       <label className="etiqueta">
-        Contacto fuera de la región
+        Contacto foráneo (fuera de la región)
         <input className="campo font-normal" maxLength={160} placeholder="Nombre y teléfono" value={form.contactoExterno} onChange={cambiar('contactoExterno')} />
       </label>
-      <label className="etiqueta">
+      <label className="etiqueta sm:col-span-2">
         ¿Quién necesita ayuda especial?
         <textarea className="campo min-h-24 py-3 font-normal" maxLength={500} placeholder="Ej. Abuela con bastón, bebé de 1 año" value={form.necesidades} onChange={cambiar('necesidades')} />
       </label>
+      </div>
       <Aviso tipo={estado.tipo}>{estado.texto}</Aviso>
       <button type="submit" className="btn-principal" disabled={enviando}>{enviando ? 'Guardando…' : 'Guardar plan'}</button>
       {plan?.actualizado_en && <p className="text-nota text-tenue">Última actualización: {fechaCorta(plan.actualizado_en)}</p>}
@@ -196,8 +199,11 @@ export default function Preparate() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-pantalla font-bold">Prepárate</h1>
-      <div role="tablist" aria-label="Secciones de preparación" className="grid grid-cols-3 gap-1 rounded-2xl bg-crema p-1">
+      <div>
+        <p className="rotulo text-tenue">Preparación familiar</p>
+        <h1 className="text-titular font-bold">Prepárate</h1>
+      </div>
+      <div role="tablist" aria-label="Secciones de preparación" className="grid grid-cols-3 gap-1 rounded-full border border-linea bg-hundido p-1">
         {PESTANAS.map((p) => (
           <button
             key={p.id}
@@ -205,9 +211,9 @@ export default function Preparate() {
             role="tab"
             aria-selected={pestana === p.id}
             onClick={() => setPestana(p.id)}
-            className={`min-h-11 rounded-xl text-texto ${pestana === p.id ? 'bg-white font-bold shadow-sm' : 'text-tenue'}`}
+            className={`flex min-h-11 items-center justify-center gap-1.5 rounded-full text-nota font-semibold sm:text-texto ${pestana === p.id ? 'bg-superficie text-tinta shadow-tarjeta' : 'text-tenue hover:text-tinta'}`}
           >
-            {p.texto}
+            <Icono nombre={p.icono} tam={20} peso={pestana === p.id ? 'fill' : 'duotone'} className="max-[379px]:hidden" />{p.texto}
           </button>
         ))}
       </div>

@@ -1,17 +1,68 @@
 <!doctype html>
-<html lang="es">
+<html lang="es-MX">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>AlertaOax · Alertas oficiales y preparación ante desastres en Oaxaca</title>
+    <meta name="description" content="Recibe alertas oficiales de sismo, huracán, inundación y deslave para tu región de Oaxaca, ubica albergues, arma tu mochila de emergencia y reporta incidentes a Protección Civil." />
+    <meta name="keywords" content="Oaxaca, alertas, Protección Civil, sismo, huracán, inundación, deslave, albergues, plan familiar" />
+    <meta name="author" content="Equipo AlertaOax · Instituto Tecnológico de Oaxaca" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://srv2100152.hstgr.cloud/" />
+
+    <!-- Íconos y PWA -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="theme-color" content="#3B3486" />
-    <meta name="description" content="AlertaOax: alertas y preparación ante desastres para comunidades de Oaxaca." />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AlertaOax</title>
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#EEF2F6" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0B1120" media="(prefers-color-scheme: dark)" />
+
+    <!-- Open Graph (WhatsApp, Facebook) y Twitter/X -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_MX" />
+    <meta property="og:site_name" content="AlertaOax" />
+    <meta property="og:url" content="https://srv2100152.hstgr.cloud/" />
+    <meta property="og:title" content="AlertaOax · Alertas oficiales para las 8 regiones de Oaxaca" />
+    <meta property="og:description" content="Alertas de Protección Civil por región, mapa de albergues, guías de preparación y reporte ciudadano de incidentes." />
+    <meta property="og:image" content="https://srv2100152.hstgr.cloud/og-alertaoax.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Emblema de radar de AlertaOax sobre curvas de nivel de Oaxaca" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="AlertaOax · Alertas oficiales para Oaxaca" />
+    <meta name="twitter:description" content="Alertas por región, albergues, preparación y reporte ciudadano." />
+    <meta name="twitter:image" content="https://srv2100152.hstgr.cloud/og-alertaoax.png" />
+
+    <!-- Datos estructurados (Schema.org) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "AlertaOax",
+        "url": "https://srv2100152.hstgr.cloud/",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Web",
+        "inLanguage": "es-MX",
+        "description": "Plataforma complementaria de alertas oficiales y preparación ante desastres naturales para las 8 regiones de Oaxaca. No sustituye al 911.",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "MXN" },
+        "areaServed": { "@type": "State", "name": "Oaxaca", "containedInPlace": { "@type": "Country", "name": "México" } },
+        "featureList": ["Alertas por región y nivel de riesgo", "Mapa de albergues y zonas de riesgo", "Guías Antes, Durante y Después", "Mochila de emergencia y plan familiar", "Reporte ciudadano de incidentes"],
+        "creator": { "@type": "EducationalOrganization", "name": "Instituto Tecnológico de Oaxaca (TecNM)" }
+      }
+    </script>
+
+    <script>
+      // Aplica el tema antes de pintar para evitar un destello de color
+      try {
+        var t = localStorage.getItem('alertaoax-tema')
+        if (t !== 'claro' && t !== 'oscuro') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'oscuro' : 'claro'
+        document.documentElement.dataset.tema = t
+      } catch (e) { document.documentElement.dataset.tema = 'claro' }
+    </script>
   </head>
   <body>
+    <noscript>AlertaOax necesita JavaScript activado. Ante una emergencia llama al 911.</noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
