@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /$
+Allow: /acceso
+Allow: /olvide
+Disallow: /api/
+Disallow: /admin
+Disallow: /autoridad
+Disallow: /restablecer
+
+Sitemap: https://srv2100152.hstgr.cloud/sitemap.xml

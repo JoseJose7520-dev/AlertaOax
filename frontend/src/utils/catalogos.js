@@ -8,23 +8,23 @@ export const REGIONES = [
 export const NIVELES = {
   critico: {
     nombre: 'Crítico', color: 'ROJA', texto: 'ALERTA ROJA · RIESGO CRÍTICO',
-    clases: { texto: 'text-riesgo-critico', fondo: 'bg-riesgo-critico-fondo', borde: 'border-riesgo-critico', solido: 'bg-riesgo-critico' },
-    hex: '#B91C1C',
+    clases: { texto: 'text-riesgo-critico-texto', fondo: 'bg-riesgo-critico-fondo', borde: 'border-riesgo-critico', solido: 'bg-riesgo-critico', sobre: 'text-white' },
+    hex: '#DC2626',
   },
   alto: {
     nombre: 'Alto', color: 'NARANJA', texto: 'ALERTA NARANJA · RIESGO ALTO',
-    clases: { texto: 'text-riesgo-alto', fondo: 'bg-riesgo-alto-fondo', borde: 'border-riesgo-alto', solido: 'bg-riesgo-alto' },
-    hex: '#C2410C',
+    clases: { texto: 'text-riesgo-alto-texto', fondo: 'bg-riesgo-alto-fondo', borde: 'border-riesgo-alto', solido: 'bg-riesgo-alto', sobre: 'text-abisal' },
+    hex: '#EA580C',
   },
   medio: {
     nombre: 'Medio', color: 'AMARILLA', texto: 'ALERTA AMARILLA · RIESGO MEDIO',
-    clases: { texto: 'text-riesgo-medio', fondo: 'bg-riesgo-medio-fondo', borde: 'border-riesgo-medio', solido: 'bg-riesgo-medio' },
-    hex: '#A16207',
+    clases: { texto: 'text-riesgo-medio-texto', fondo: 'bg-riesgo-medio-fondo', borde: 'border-riesgo-medio', solido: 'bg-riesgo-medio', sobre: 'text-abisal' },
+    hex: '#D97706',
   },
   vigilancia: {
     nombre: 'Vigilancia', color: 'VERDE', texto: 'AVISO VERDE · VIGILANCIA',
-    clases: { texto: 'text-ok-texto', fondo: 'bg-riesgo-bajo-fondo', borde: 'border-riesgo-bajo', solido: 'bg-riesgo-bajo' },
-    hex: '#15803D',
+    clases: { texto: 'text-ok-texto', fondo: 'bg-riesgo-bajo-fondo', borde: 'border-riesgo-bajo', solido: 'bg-riesgo-bajo', sobre: 'text-abisal' },
+    hex: '#059669',
   },
 }
 export const ORDEN_NIVELES = ['vigilancia', 'medio', 'alto', 'critico']
@@ -37,6 +37,12 @@ export const TIPOS_ALERTA = {
   otro: 'Otro',
 }
 
+/** Ícono (duotono) de cada fenómeno o tipo de reporte. */
+export const ICONO_TIPO = {
+  huracan: 'huracan', sismo: 'sismo', inundacion: 'inundacion', deslizamiento: 'deslizamiento', otro: 'otro',
+  deslave: 'deslave', arbol: 'arbol', cable: 'cable', vivienda: 'vivienda',
+}
+
 export const TIPOS_REPORTE = {
   inundacion: 'Inundación',
   deslave: 'Deslave',
@@ -47,8 +53,8 @@ export const TIPOS_REPORTE = {
 }
 
 export const ESTADOS_REPORTE = {
-  recibido: { nombre: 'Recibido', paso: 1, clases: 'bg-crema text-barro-suave' },
-  en_atencion: { nombre: 'En atención', paso: 2, clases: 'bg-anil-claro text-anil-oscuro' },
+  recibido: { nombre: 'Recibido', paso: 1, clases: 'bg-hundido text-tinta-suave' },
+  en_atencion: { nombre: 'En atención', paso: 2, clases: 'bg-acento-claro text-acento-fuerte' },
   atendido: { nombre: 'Atendido', paso: 3, clases: 'bg-riesgo-bajo-fondo text-ok-texto' },
 }
 

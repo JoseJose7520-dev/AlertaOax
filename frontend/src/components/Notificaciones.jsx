@@ -44,22 +44,22 @@ export default function Notificaciones() {
         aria-expanded={abierto}
         aria-haspopup="true"
         aria-label={noLeidas > 0 ? `Avisos, ${noLeidas} sin leer` : 'Avisos'}
-        className="relative inline-flex size-11 items-center justify-center rounded-xl text-barro hover:bg-crema"
+        className="relative inline-flex size-11 items-center justify-center rounded-xl border border-linea bg-superficie text-tinta hover:border-borde"
       >
-        <Icono nombre="campana" />
+        <Icono nombre="campana" tam={22} peso={noLeidas > 0 ? 'fill' : 'duotone'} className={noLeidas > 0 ? 'text-acento dark:text-acento-fuerte' : ''} />
         {noLeidas > 0 && (
-          <span className="absolute top-1 right-1 flex min-w-5 items-center justify-center rounded-full bg-anil px-1 text-nota leading-5 font-bold text-white" aria-hidden="true">
+          <span className="absolute -top-1.5 -right-1.5 flex min-w-5.5 items-center justify-center rounded-full bg-riesgo-critico px-1 text-[12px] leading-5.5 font-bold text-white ring-2 ring-fondo" aria-hidden="true">
             {noLeidas > 9 ? '9+' : noLeidas}
           </span>
         )}
       </button>
 
       {abierto && (
-        <div className="fixed inset-x-4 top-16 z-30 mx-auto max-w-sm overflow-hidden rounded-2xl border border-arena bg-white shadow-lg">
-          <div className="flex items-center justify-between border-b border-arena px-4 py-3">
-            <h2 className="text-subtitulo font-bold">Avisos</h2>
+        <div className="fixed inset-x-4 top-24 z-30 mx-auto max-w-sm overflow-hidden rounded-2xl border border-linea bg-superficie shadow-2xl sm:absolute sm:inset-x-auto sm:top-13 sm:right-0 sm:w-96">
+          <div className="flex items-center justify-between border-b border-linea px-4 py-3">
+            <h2 className="flex items-center gap-2 text-subtitulo font-bold"><Icono nombre="campana" tam={20} className="text-acento dark:text-acento-fuerte" /> Avisos</h2>
             {noLeidas > 0 && (
-              <button type="button" onClick={leerTodas} className="min-h-11 px-1 text-nota font-bold text-anil">Marcar todo como leído</button>
+              <button type="button" onClick={leerTodas} className="min-h-11 px-1 text-nota font-bold text-acento dark:text-acento-fuerte">Marcar todo como leído</button>
             )}
           </div>
           {lista.length === 0 ? (
@@ -67,16 +67,16 @@ export default function Notificaciones() {
           ) : (
             <ul className="max-h-[60dvh] overflow-y-auto">
               {lista.slice(0, 20).map((n) => (
-                <li key={n.id} className="border-b border-arena last:border-0">
+                <li key={n.id} className="border-b border-linea last:border-0">
                   <Link
                     to={`/alertas/${n.alerta_id}`}
                     onClick={() => { setAbierto(false); if (!n.leida) api.patch(`/notifications/${n.id}/leida`).then(recargar).catch(() => {}) }}
-                    className={`flex flex-col gap-1 px-4 py-3 text-barro no-underline hover:bg-anil-suave ${n.leida ? '' : 'bg-anil-suave'}`}
+                    className={`flex flex-col gap-1 px-4 py-3 text-tinta no-underline hover:bg-acento-suave ${n.leida ? '' : 'bg-acento-suave'}`}
                   >
                     <span className="flex items-center gap-2">
                       <InsigniaNivel nivel={n.nivel} />
                       {!n.vigente && <span className="text-nota text-tenue">Terminó</span>}
-                      {!n.leida && <span className="ml-auto size-2.5 rounded-full bg-anil" aria-label="Sin leer" />}
+                      {!n.leida && <span className="ml-auto size-2.5 rounded-full bg-acento" aria-label="Sin leer" />}
                     </span>
                     <span className={n.leida ? '' : 'font-bold'}>{n.titulo}</span>
                     <span className="text-nota text-tenue">{haceCuanto(n.creada_en)}</span>

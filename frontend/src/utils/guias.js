@@ -61,6 +61,26 @@ export const GUIAS = [
       'Sigue solo la información de fuentes confiables.',
     ],
   },
+  {
+    id: 'deslizamiento',
+    nombre: 'Deslave',
+    resumen: 'Atiende las grietas y los ruidos del cerro',
+    antes: [
+      'Revisa si hay grietas en el terreno, muros o bardas cerca de tu casa.',
+      'Mantén limpias las cunetas y desagües para que el agua no se acumule.',
+      'Identifica una ruta para salir hacia terreno firme y alto.',
+    ],
+    durante: [
+      'Si escuchas ruidos de árboles o rocas que se mueven, aléjate de inmediato.',
+      'Muévete hacia los lados del deslave, nunca cuesta abajo.',
+      'No cruces caminos cubiertos de lodo o piedras.',
+    ],
+    despues: [
+      'No regreses hasta que la autoridad diga que es seguro.',
+      'Aléjate de la zona: pueden ocurrir más deslaves.',
+      'Reporta caminos bloqueados y daños en AlertaOax.',
+    ],
+  },
 ]
 
 export const MOCHILA = [

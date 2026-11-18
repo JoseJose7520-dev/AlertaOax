@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useApi } from '../hooks/useApi.js'
-import { NIVELES, TIPOS_ALERTA, fechaCorta } from '../utils/catalogos.js'
+import { ICONO_TIPO, NIVELES, TIPOS_ALERTA, fechaCorta } from '../utils/catalogos.js'
+import { EscalaNivel } from '../components/TarjetaAlerta.jsx'
 import { QUE_HACER } from '../utils/indicaciones.js'
 import Aviso from '../components/Aviso.jsx'
 import Cargando from '../components/Cargando.jsx'
@@ -32,47 +33,49 @@ export default function DetalleAlerta() {
   }
 
   return (
-    <article className="-mx-5 flex flex-col">
-      <div className="flex items-center gap-2 px-3 pb-2">
-        <button type="button" onClick={() => navegar(-1)} className="inline-flex size-11 items-center justify-center rounded-xl hover:bg-crema" aria-label="Volver">
-          <Icono nombre="atras" />
-        </button>
-        <span className="font-bold">Alerta</span>
-      </div>
+    <article className="flex flex-col gap-4">
+      <button type="button" onClick={() => navegar(-1)} className="inline-flex min-h-11 items-center gap-1.5 self-start rounded-xl pr-3 font-semibold text-tinta-suave hover:text-tinta" aria-label="Volver">
+        <Icono nombre="regresar" tam={20} peso="bold" /> Volver
+      </button>
 
-      <p className={`flex items-center gap-2.5 px-5 py-3 text-texto font-bold tracking-wide text-white ${n.clases.solido}`}>
-        <Icono nombre="alerta" tam={22} grosor={2.2} /> {n.color} · {n.nombre.toUpperCase()}
-        {!a.vigente && <span className="ml-auto rounded-full bg-white/25 px-2 py-0.5 text-nota">TERMINÓ</span>}
+      <div className="tarjeta overflow-hidden">
+      <p className={`flex items-center gap-2.5 px-5 py-3 text-texto font-bold tracking-wide ${n.clases.solido} ${n.clases.sobre}`}>
+        <Icono nombre={a.nivel === 'critico' ? 'critico' : 'alerta'} tam={22} peso="fill" /> ALERTA {n.color} · {n.nombre.toUpperCase()}
+        {!a.vigente && <span className="ml-auto rounded-full bg-black/20 px-2 py-0.5 text-nota">TERMINÓ</span>}
       </p>
 
-      <div className="flex flex-col gap-5 px-5 py-5">
-        <div className="flex flex-col gap-1.5">
-          <h1 className="text-titular leading-tight font-bold">{a.titulo}</h1>
-          <p className="text-tenue">{TIPOS_ALERTA[a.tipo]} · Región {a.region}</p>
+      <div className="topografia flex flex-col gap-5 px-5 py-5 sm:px-6">
+        <div className="flex items-start gap-4">
+          <span className={`icono-caja size-14 ${n.clases.fondo} ${n.clases.texto}`}><Icono nombre={ICONO_TIPO[a.tipo]} tam={32} /></span>
+          <div className="flex min-w-0 flex-col gap-1">
+            <h1 className="text-titular font-bold">{a.titulo}</h1>
+            <p className="text-tenue">{TIPOS_ALERTA[a.tipo]} · Región {a.region}</p>
+          </div>
         </div>
+        <EscalaNivel nivel={a.nivel} />
 
         <dl className="grid grid-cols-2 gap-2.5">
-          <div className="tarjeta p-3">
-            <dt className="text-nota text-tenue">{a.vigente ? 'Vigente hasta' : 'Terminó'}</dt>
+          <div className="rounded-xl bg-hundido p-3">
+            <dt className="rotulo text-tenue">{a.vigente ? 'Vigente hasta' : 'Terminó'}</dt>
             <dd className="font-bold">{fechaCorta(a.vigente_hasta)}</dd>
           </div>
-          <div className="tarjeta p-3">
-            <dt className="text-nota text-tenue">Publicó</dt>
-            <dd className="font-bold">{a.institucion}</dd>
+          <div className="rounded-xl bg-hundido p-3">
+            <dt className="rotulo text-tenue">Publicó</dt>
+            <dd className="flex items-center gap-1 font-bold"><Icono nombre="escudo" tam={16} peso="fill" className="text-ok-texto" /> {a.institucion}</dd>
           </div>
         </dl>
 
         <section className="flex flex-col gap-2">
-          <h2 className="text-subtitulo font-bold">Indicaciones de la autoridad</h2>
-          <p className="leading-relaxed whitespace-pre-line text-barro-suave">{a.descripcion}</p>
+          <h2 className="flex items-center gap-2 text-subtitulo font-bold"><Icono nombre="megafono" tam={22} className="text-acento dark:text-acento-fuerte" /> Indicaciones de la autoridad</h2>
+          <p className="leading-relaxed whitespace-pre-line text-tinta-suave">{a.descripcion}</p>
         </section>
 
         <section className="flex flex-col gap-2.5">
-          <h2 className="text-subtitulo font-bold">Qué hacer ahora</h2>
+          <h2 className="flex items-center gap-2 text-subtitulo font-bold"><Icono nombre="objetivo" tam={22} className="text-acento dark:text-acento-fuerte" /> Qué hacer ahora</h2>
           <ol className="flex flex-col gap-2.5">
             {pasos.map(([fuerte, resto], i) => (
-              <li key={fuerte} className="flex items-start gap-3">
-                <span className="flex size-7.5 shrink-0 items-center justify-center rounded-full bg-anil text-texto font-bold text-white">{i + 1}</span>
+              <li key={fuerte} className="flex items-start gap-3 rounded-xl border border-linea bg-superficie p-3">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-acento font-display text-texto font-bold text-white">{i + 1}</span>
                 <span className="leading-snug"><strong>{fuerte}</strong> {resto}</span>
               </li>
             ))}
@@ -81,14 +84,15 @@ export default function DetalleAlerta() {
 
         <div className="flex flex-col gap-2">
           <Link to="/mapa?cerca=1" className="btn-principal">
-            <Icono nombre="navegar" tam={20} grosor={2.2} /> Ir al albergue más cercano
+            <Icono nombre="navegar" tam={20} peso="fill" /> Ir al albergue más cercano
           </Link>
           <div className="grid grid-cols-2 gap-2">
-            <Link to="/preparate" className="btn-neutro">Ver mi mochila</Link>
-            <button type="button" onClick={compartir} className="btn-neutro">Compartir</button>
+            <Link to="/preparate" className="btn-neutro"><Icono nombre="mochila" tam={20} /> Ver mi mochila</Link>
+            <button type="button" onClick={compartir} className="btn-neutro"><Icono nombre="compartir" tam={20} /> Compartir</button>
           </div>
           {copiado && <Aviso tipo="exito">Copiado. Pégalo en WhatsApp para avisar a tu familia.</Aviso>}
         </div>
+      </div>
       </div>
     </article>
   )

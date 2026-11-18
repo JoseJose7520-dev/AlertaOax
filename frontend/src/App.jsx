@@ -1,4 +1,8 @@
-import { Route, Routes } from 'react-router-dom'
+import { Route, Routes, useLocation } from 'react-router-dom'
+import { useAuth } from './context/AuthContext.jsx'
+import AvisoCookies from './components/AvisoCookies.jsx'
+import Banda911 from './components/Banda911.jsx'
+import BotonContacto from './components/BotonContacto.jsx'
 import RutaProtegida from './routes/RutaProtegida.jsx'
 import LayoutCiudadano from './components/layout/LayoutCiudadano.jsx'
 import LayoutPanel from './components/layout/LayoutPanel.jsx'
@@ -15,22 +19,47 @@ import Autoridades from './pages/admin/Autoridades.jsx'
 import PublicarAlerta from './pages/autoridad/PublicarAlerta.jsx'
 import MisAlertas from './pages/autoridad/MisAlertas.jsx'
 import NoEncontrada from './pages/NoEncontrada.jsx'
+import OlvidePassword from './pages/OlvidePassword.jsx'
+import RestablecerPassword from './pages/RestablecerPassword.jsx'
+import Usuarios from './pages/admin/Usuarios.jsx'
 
 const MENU_AUTORIDAD = [
-  { a: '/autoridad', texto: 'Publicar alerta', icono: 'campana', exacta: true },
+  { a: '/autoridad', texto: 'Publicar alerta', corto: 'Publicar', icono: 'megafono', exacta: true },
   { a: '/autoridad/alertas', texto: 'Mis alertas', icono: 'lista' },
-  { a: '/autoridad/reportes', texto: 'Reportes ciudadanos', icono: 'usuario' },
+  { a: '/autoridad/reportes', texto: 'Reportes ciudadanos', corto: 'Reportes', icono: 'reporte' },
 ]
 const MENU_ADMIN = [
   { a: '/admin', texto: 'Resumen', icono: 'grafica', exacta: true },
   { a: '/admin/autoridades', texto: 'Autoridades', icono: 'escudo' },
-  { a: '/autoridad', texto: 'Publicar alerta', icono: 'campana' },
+  { a: '/admin/usuarios', texto: 'Usuarios', icono: 'usuarios' },
+  { a: '/autoridad', texto: 'Publicar alerta', corto: 'Publicar', icono: 'megafono' },
 ]
+
+const RUTAS_CIUDADANO = /^\/(mapa|preparate|reportar|reportes|alertas\/.+)?$/
+
+/** Elementos presentes en todas las pantallas: franja 911, contacto rápido y aviso de cookies. */
+function Globales() {
+  const { usuario } = useAuth()
+  const { pathname } = useLocation()
+  // En la app del ciudadano (celular) hay barra inferior: los flotantes suben para no taparla
+  const elevado = usuario?.rol === 'ciudadano' && RUTAS_CIUDADANO.test(pathname)
+  return (
+    <>
+      <Banda911 />
+      <BotonContacto elevado={elevado} />
+      <AvisoCookies elevado={elevado} />
+    </>
+  )
+}
 
 export default function App() {
   return (
+    <>
+    <Globales />
     <Routes>
       <Route path="/acceso" element={<Acceso />} />
+      <Route path="/olvide" element={<OlvidePassword />} />
+      <Route path="/restablecer" element={<RestablecerPassword />} />
 
       <Route element={<RutaProtegida roles={['ciudadano']} />}>
         <Route element={<LayoutCiudadano />}>
@@ -55,10 +84,12 @@ export default function App() {
         <Route path="admin" element={<LayoutPanel titulo="Administración" enlaces={MENU_ADMIN} />}>
           <Route index element={<Resumen />} />
           <Route path="autoridades" element={<Autoridades />} />
+          <Route path="usuarios" element={<Usuarios />} />
         </Route>
       </Route>
 
       <Route path="*" element={<NoEncontrada />} />
     </Routes>
+    </>
   )
 }

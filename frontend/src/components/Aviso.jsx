@@ -1,7 +1,7 @@
 const ESTILOS = {
-  error: 'bg-riesgo-critico-fondo text-[#7F1414] border-riesgo-critico/30',
+  error: 'bg-riesgo-critico-fondo text-riesgo-critico-texto border-riesgo-critico/30',
   exito: 'bg-riesgo-bajo-fondo text-ok-texto border-riesgo-bajo/30',
-  info: 'bg-anil-claro text-anil-oscuro border-anil/20',
+  info: 'bg-acento-claro text-acento-fuerte border-acento/20',
 }
 
 /** Mensaje en línea. Los errores se anuncian a lectores de pantalla (role="alert"). */

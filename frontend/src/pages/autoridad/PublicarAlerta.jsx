@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext.jsx'
 import { api } from '../../services/api.js'
-import { NIVELES, ORDEN_NIVELES, REGIONES, TIPOS_ALERTA, fechaCorta } from '../../utils/catalogos.js'
+import { ICONO_TIPO, NIVELES, ORDEN_NIVELES, REGIONES, TIPOS_ALERTA, fechaCorta } from '../../utils/catalogos.js'
+import { EscalaNivel } from '../../components/TarjetaAlerta.jsx'
 import Aviso from '../../components/Aviso.jsx'
 import Confirmar from '../../components/Confirmar.jsx'
 import Icono from '../../components/Icono.jsx'
@@ -54,11 +55,11 @@ export default function PublicarAlerta() {
   if (resultado) {
     return (
       <section className="flex max-w-xl flex-col items-start gap-4">
-        <span className="flex size-16 items-center justify-center rounded-full bg-riesgo-bajo-fondo text-riesgo-bajo">
-          <Icono nombre="palomita" tam={32} grosor={2.6} />
+        <span className="flex size-18 items-center justify-center rounded-full bg-riesgo-bajo-fondo text-ok-texto ring-8 ring-riesgo-bajo-fondo/50">
+          <Icono nombre="ok" tam={40} peso="fill" />
         </span>
-        <h1 className="text-pantalla font-bold">Alerta publicada</h1>
-        <p className="text-barro-suave">{resultado.mensaje}</p>
+        <h1 className="text-titular font-bold">Alerta publicada</h1>
+        <p className="text-tinta-suave">{resultado.mensaje}</p>
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={() => setResultado(null)} className="btn-principal">Publicar otra</button>
           <Link to="/autoridad/alertas" className="btn-neutro min-h-13">Ver mis alertas</Link>
@@ -70,7 +71,13 @@ export default function PublicarAlerta() {
   return (
     <div className="flex flex-wrap items-start gap-7">
       <form onSubmit={revisar} className="tarjeta flex min-w-0 flex-[2_1_420px] flex-col gap-4.5 p-6" noValidate>
-        <h1 className="text-titular font-bold">Nueva alerta</h1>
+        <div className="flex items-start gap-3.5">
+          <span className="icono-caja size-12 bg-acento-claro text-acento dark:text-acento-fuerte"><Icono nombre="megafono" tam={28} /></span>
+          <div>
+            <p className="rotulo text-tenue">Emisión oficial</p>
+            <h1 className="text-titular font-bold">Nueva alerta</h1>
+          </div>
+        </div>
 
         <div className="flex flex-wrap gap-4">
           <label className="etiqueta flex-[1_1_200px]">
@@ -99,9 +106,10 @@ export default function PublicarAlerta() {
                   type="button"
                   aria-pressed={activo}
                   onClick={() => setForm((f) => ({ ...f, nivel: clave }))}
-                  className={`min-h-13 rounded-xl border-2 font-bold ${activo ? `${nv.clases.solido} border-transparent text-white` : `${nv.clases.fondo} ${nv.clases.texto} border-transparent`}`}
+                  className={`flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl border-2 font-bold transition ${activo ? `${nv.clases.solido} ${nv.clases.sobre} border-transparent shadow-md` : `${nv.clases.fondo} ${nv.clases.texto} border-transparent hover:border-current`}`}
                 >
-                  {nv.nombre}
+                  <span className="flex items-center gap-1.5"><span className={`size-2.5 rounded-full ${activo ? 'bg-current' : nv.clases.solido}`} aria-hidden="true" />{nv.nombre}</span>
+                  <span className="text-[11px] font-semibold tracking-wide opacity-80">ALERTA {nv.color}</span>
                 </button>
               )
             })}
@@ -129,13 +137,18 @@ export default function PublicarAlerta() {
         </div>
       </form>
 
-      <aside className="flex min-w-0 flex-[1_1_300px] flex-col gap-2.5" aria-label="Vista previa">
-        <h2 className="font-bold text-tenue">Así la verá la población</h2>
-        <div className={`flex flex-col gap-2.5 rounded-[20px] border-2 p-4.5 ${n.clases.fondo} ${n.clases.borde}`}>
-          <span className={`text-nota font-bold tracking-wide ${n.clases.texto}`}>{n.texto}</span>
-          <span className="text-subtitulo leading-tight font-bold">{form.titulo || 'Título de la alerta'}</span>
-          <span className="text-texto leading-snug whitespace-pre-line text-barro-suave">{form.descripcion || 'Indicaciones para la población.'}</span>
-          <span className="text-nota text-tenue">{TIPOS_ALERTA[form.tipo]} · Vigente hasta {fechaCorta(form.vigenteHasta)}</span>
+      <aside className="flex min-w-0 flex-[1_1_300px] flex-col gap-2.5 lg:sticky lg:top-32" aria-label="Vista previa">
+        <h2 className="rotulo flex items-center gap-2 text-tenue"><Icono nombre="ojo" tam={18} /> Así la verá la población</h2>
+        <div className={`topografia relative flex flex-col gap-3 overflow-hidden rounded-3xl border-2 bg-superficie p-5 shadow-tarjeta ${n.clases.borde} ${form.nivel === 'critico' ? 'halo-critico' : ''}`}>
+          <span className={`absolute inset-x-0 top-0 h-2 ${n.clases.solido}`} aria-hidden="true" />
+          <span className={`mt-1 self-start rounded-full px-3 py-1 text-nota font-bold tracking-wide ${n.clases.fondo} ${n.clases.texto}`}>{n.texto}</span>
+          <span className="flex items-start gap-3">
+            <span className={`icono-caja size-12 ${n.clases.fondo} ${n.clases.texto}`}><Icono nombre={ICONO_TIPO[form.tipo]} tam={28} /></span>
+            <span className="font-display text-pantalla font-bold">{form.titulo || 'Título de la alerta'}</span>
+          </span>
+          <span className="text-texto leading-snug whitespace-pre-line text-tinta-suave">{form.descripcion || 'Indicaciones para la población.'}</span>
+          <EscalaNivel nivel={form.nivel} />
+          <span className="text-nota text-tenue">{TIPOS_ALERTA[form.tipo]} · Región {form.region} · Vigente hasta {fechaCorta(form.vigenteHasta)}</span>
         </div>
       </aside>
 
@@ -143,15 +156,15 @@ export default function PublicarAlerta() {
         abierto={confirmando}
         titulo={`¿Publicar alerta ${n.color.toLowerCase()} (riesgo ${n.nombre.toLowerCase()})?`}
         textoConfirmar="Sí, publicar"
-        claseConfirmar={`inline-flex min-h-13 items-center justify-center rounded-2xl px-5 text-subtitulo font-bold text-white ${n.clases.solido} disabled:opacity-60`}
+        claseConfirmar={`inline-flex min-h-13 items-center justify-center rounded-2xl px-5 text-subtitulo font-bold ${n.clases.sobre} ${n.clases.solido} disabled:opacity-60`}
         enviando={enviando}
         onConfirmar={publicar}
         onCancelar={() => setConfirmando(false)}
       >
         <p>
-          Se enviará a <strong className="text-barro">todas las personas registradas en {form.region}</strong> y no se puede deshacer.
+          Se enviará a <strong className="text-tinta">todas las personas registradas en {form.region}</strong> y no se puede deshacer.
         </p>
-        <p><strong className="text-barro">{form.titulo}</strong></p>
+        <p><strong className="text-tinta">{form.titulo}</strong></p>
         <p>{TIPOS_ALERTA[form.tipo]} · Vigente hasta {fechaCorta(form.vigenteHasta)}</p>
       </Confirmar>
     </div>
