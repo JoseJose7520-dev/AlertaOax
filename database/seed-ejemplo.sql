@@ -8,6 +8,7 @@ INSERT INTO albergues (region_id, nombre, direccion, latitud, longitud, capacida
   ((SELECT id FROM regiones WHERE nombre = 'Costa'), 'Escuela Primaria Benito Juárez', 'Centro, San Pedro Pochutla', 15.7445, -96.4660, 180, 45),
   ((SELECT id FROM regiones WHERE nombre = 'Costa'), 'Auditorio Municipal de Pochutla', 'Calle Guadalupe, San Pedro Pochutla', 15.7470, -96.4632, 250, 210),
   ((SELECT id FROM regiones WHERE nombre = 'Costa'), 'Unidad Deportiva de Puerto Escondido', 'Puerto Escondido, San Pedro Mixtepec', 15.8640, -97.0700, 300, 60),
+  ((SELECT id FROM regiones WHERE nombre = 'Costa'), 'Casa de la Cultura de Pochutla', 'Av. Lázaro Cárdenas, San Pedro Pochutla', 15.7428, -96.4685, 120, 120),
   ((SELECT id FROM regiones WHERE nombre = 'Valles Centrales'), 'Gimnasio Municipal de Oaxaca', 'Centro, Oaxaca de Juárez', 17.0650, -96.7230, 400, 0),
   ((SELECT id FROM regiones WHERE nombre = 'Valles Centrales'), 'Escuela Secundaria Técnica 1', 'Santa Lucía del Camino', 17.0610, -96.6960, 200, 0),
   ((SELECT id FROM regiones WHERE nombre = 'Istmo'), 'Casa de la Cultura de Juchitán', 'Centro, Juchitán de Zaragoza', 16.4330, -95.0190, 220, 30),

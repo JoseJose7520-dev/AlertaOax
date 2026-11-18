@@ -3,12 +3,22 @@ import ErrorHttp from '../utils/ErrorHttp.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { verificarToken } from '../middlewares/verificarToken.js'
 import { verificarRol } from '../middlewares/verificarRol.js'
-import { listarAutoridades, obtenerMetricas, validarAutoridad } from '../models/admin.model.js'
+import { listarAutoridades, listarUsuarios, obtenerMetricas, validarAutoridad } from '../models/admin.model.js'
 
 const router = Router()
 router.use(verificarToken, verificarRol('administrador'))
 
 const ESTADOS = ['pendiente', 'aprobada', 'rechazada']
+const ROLES = ['ciudadano', 'autoridad', 'administrador']
+
+// GET /api/admin/users?rol=ciudadano&buscar=maria&pagina=1
+router.get('/users', asyncHandler(async (req, res) => {
+  const rol = typeof req.query.rol === 'string' ? req.query.rol : ''
+  if (rol && !ROLES.includes(rol)) throw new ErrorHttp(400, 'Rol inválido.')
+  const buscar = typeof req.query.buscar === 'string' ? req.query.buscar.trim().slice(0, 80) : ''
+  const pagina = Math.max(1, Number.parseInt(req.query.pagina, 10) || 1)
+  res.json(await listarUsuarios({ rol: rol || null, buscar, pagina }))
+}))
 
 // GET /api/admin/metrics
 router.get('/metrics', asyncHandler(async (req, res) => {
