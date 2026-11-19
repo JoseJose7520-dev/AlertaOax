@@ -7,22 +7,22 @@ export const REGIONES = [
 /** Niveles de riesgo (semáforo). "vigilancia" se muestra como nivel bajo/verde. */
 export const NIVELES = {
   critico: {
-    nombre: 'Crítico', color: 'ROJA', texto: 'ALERTA ROJA · RIESGO CRÍTICO',
+    nombre: 'Crítico', color: 'roja', texto: 'Alerta roja: riesgo crítico',
     clases: { texto: 'text-riesgo-critico-texto', fondo: 'bg-riesgo-critico-fondo', borde: 'border-riesgo-critico', solido: 'bg-riesgo-critico', sobre: 'text-white' },
     hex: '#DC2626',
   },
   alto: {
-    nombre: 'Alto', color: 'NARANJA', texto: 'ALERTA NARANJA · RIESGO ALTO',
+    nombre: 'Alto', color: 'naranja', texto: 'Alerta naranja: riesgo alto',
     clases: { texto: 'text-riesgo-alto-texto', fondo: 'bg-riesgo-alto-fondo', borde: 'border-riesgo-alto', solido: 'bg-riesgo-alto', sobre: 'text-abisal' },
     hex: '#EA580C',
   },
   medio: {
-    nombre: 'Medio', color: 'AMARILLA', texto: 'ALERTA AMARILLA · RIESGO MEDIO',
+    nombre: 'Medio', color: 'amarilla', texto: 'Alerta amarilla: riesgo medio',
     clases: { texto: 'text-riesgo-medio-texto', fondo: 'bg-riesgo-medio-fondo', borde: 'border-riesgo-medio', solido: 'bg-riesgo-medio', sobre: 'text-abisal' },
     hex: '#D97706',
   },
   vigilancia: {
-    nombre: 'Vigilancia', color: 'VERDE', texto: 'AVISO VERDE · VIGILANCIA',
+    nombre: 'Vigilancia', color: 'verde', texto: 'Aviso verde: vigilancia',
     clases: { texto: 'text-ok-texto', fondo: 'bg-riesgo-bajo-fondo', borde: 'border-riesgo-bajo', solido: 'bg-riesgo-bajo', sobre: 'text-abisal' },
     hex: '#059669',
   },

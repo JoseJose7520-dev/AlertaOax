@@ -17,9 +17,10 @@ export const sesion = {
 }
 
 export class ErrorApi extends Error {
-  constructor(estado, mensaje) {
+  constructor(estado, mensaje, datos = {}) {
     super(mensaje)
     this.estado = estado
+    this.datos = datos // campos extra de la respuesta, p. ej. { verificarCorreo: true }
   }
 }
 
@@ -46,7 +47,7 @@ async function peticion(metodo, ruta, cuerpo) {
   const datos = await respuesta.json().catch(() => ({}))
   if (!respuesta.ok) {
     if (respuesta.status === 401 && token) alExpirar()
-    throw new ErrorApi(respuesta.status, datos.mensaje || 'Ocurrió un error. Inténtalo de nuevo.')
+    throw new ErrorApi(respuesta.status, datos.mensaje || 'Ocurrió un error. Inténtalo de nuevo.', datos)
   }
   return datos
 }

@@ -48,7 +48,7 @@ export default function Notificaciones() {
       >
         <Icono nombre="campana" tam={22} peso={noLeidas > 0 ? 'fill' : 'duotone'} className={noLeidas > 0 ? 'text-acento dark:text-acento-fuerte' : ''} />
         {noLeidas > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 flex min-w-5.5 items-center justify-center rounded-full bg-riesgo-critico px-1 text-[12px] leading-5.5 font-bold text-white ring-2 ring-fondo" aria-hidden="true">
+          <span className="absolute -top-1.5 -right-1.5 flex min-w-5.5 items-center justify-center rounded-full bg-riesgo-critico px-1 text-mini leading-5.5 font-bold text-white ring-2 ring-fondo" aria-hidden="true">
             {noLeidas > 9 ? '9+' : noLeidas}
           </span>
         )}

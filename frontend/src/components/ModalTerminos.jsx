@@ -45,7 +45,7 @@ export default function ModalTerminos({ abierto, seccion = 'terminos', onCerrar,
           <div className="flex items-center gap-3">
             <span className="icono-caja size-11 bg-acento-claro text-acento dark:text-acento-fuerte"><Icono nombre={doc.icono} tam={24} /></span>
             <div>
-              <p className="rotulo text-tenue">Información legal · AlertaOax</p>
+              <p className="rotulo text-tenue">Información legal</p>
               <h2 id={`${uid}-titulo`} data-titulo className="text-pantalla font-bold">{doc.titulo}</h2>
             </div>
           </div>
@@ -69,7 +69,7 @@ export default function ModalTerminos({ abierto, seccion = 'terminos', onCerrar,
       <div ref={cuerpo} id={`${uid}-panel`} role="tabpanel" aria-labelledby={`${uid}-${doc.id}`} className="flex flex-col gap-3 overflow-y-auto px-5 py-5 sm:px-6">
         {doc.bloques.map(([t, d], i) => (
           <section key={t} className="flex gap-3.5 rounded-2xl border border-linea bg-hundido/50 px-4 py-3.5">
-            <span className="mt-0.5 font-mono text-nota font-semibold text-acento dark:text-acento-fuerte" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+            <span className="mt-0.5 text-nota font-semibold text-acento tabular-nums dark:text-acento-fuerte" aria-hidden="true">{i + 1}.</span>
             <div>
               <h3 className="font-semibold">{t}</h3>
               <p className="mt-1 leading-relaxed text-tinta-suave">{d}</p>

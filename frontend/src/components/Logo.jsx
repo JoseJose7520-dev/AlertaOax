@@ -22,7 +22,7 @@ export default function Logo({ tam = 34, conTexto = true, className = '', claro 
         <circle cx="20" cy="17" r="2.2" fill="#fff" />
       </svg>
       {conTexto && (
-        <span className={`font-display text-[22px] font-bold tracking-tight ${claro ? 'text-white' : 'text-tinta'}`}>
+        <span className={`text-[22px] font-bold ${claro ? 'text-white' : 'text-tinta'}`}>
           Alerta<span className={claro ? 'text-cyan-300' : 'text-acento dark:text-acento-fuerte'}>Oax</span>
         </span>
       )}

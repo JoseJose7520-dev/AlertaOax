@@ -28,7 +28,7 @@ export default function AvisoCookies({ elevado = false }) {
       <div className="flex gap-3">
         <span className="icono-caja size-10 shrink-0 bg-riesgo-medio-fondo text-riesgo-medio-texto"><Icono nombre="galleta" tam={24} /></span>
         <div className="flex flex-col gap-1">
-          <h2 className="font-display text-subtitulo font-bold">Tu privacidad</h2>
+          <h2 className="text-subtitulo font-bold">Tu privacidad</h2>
           <p className="text-nota leading-relaxed text-tinta-suave">
             Solo guardamos lo esencial: tu sesión y el tema. Sin publicidad ni rastreo de terceros.
           </p>

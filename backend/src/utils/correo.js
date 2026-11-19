@@ -25,7 +25,7 @@ export async function enviarRecuperacion({ para, nombre, enlace }) {
     console.log(`[correo] SMTP sin configurar. Enlace de recuperación para ${para}: ${enlace}`)
     return false
   }
-  const html = `<!doctype html><html lang="es"><body style="margin:0;background:#EEF2F6;font-family:Arial,Helvetica,sans-serif;color:#0F172A">
+  const html = `<!doctype html><html lang="es"><body style="margin:0;background:#EEF2F6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0F172A">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
   <table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden" cellpadding="0" cellspacing="0">
     <tr><td style="background:#0B1120;padding:20px 28px;color:#ffffff;font-size:20px;font-weight:bold">AlertaOax</td></tr>
@@ -41,6 +41,37 @@ export async function enviarRecuperacion({ para, nombre, enlace }) {
     to: para,
     subject: 'AlertaOax: crea tu nueva contraseña',
     text: `Hola, ${nombre}.\n\nPara crear una nueva contraseña abre este enlace (vence en 30 minutos):\n${enlace}\n\nSi no fuiste tú, ignora este mensaje.`,
+    html,
+  })
+  return true
+}
+
+/**
+ * Envía el código de 6 dígitos para confirmar el correo de una cuenta nueva.
+ * Sin SMTP configurado, escribe el código en la consola (modo desarrollo) y devuelve false.
+ */
+export async function enviarCodigoVerificacion({ para, nombre, codigo, minutos }) {
+  const t = obtenerTransporte()
+  if (!t) {
+    console.log(`[correo] SMTP sin configurar. Código de verificación para ${para}: ${codigo}`)
+    return false
+  }
+  const html = `<!doctype html><html lang="es"><body style="margin:0;background:#EEF2F6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0F172A">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
+  <table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden" cellpadding="0" cellspacing="0">
+    <tr><td style="background:#0B1120;padding:20px 28px;color:#ffffff;font-size:20px;font-weight:bold">AlertaOax</td></tr>
+    <tr><td style="padding:28px">
+      <p style="font-size:18px;font-weight:bold;margin:0 0 12px">Hola, ${escapar(nombre)}</p>
+      <p style="font-size:15px;line-height:1.5;margin:0 0 20px">Escribe este código en AlertaOax para confirmar tu correo. Vence en ${minutos} minutos.</p>
+      <p style="margin:0 0 24px;font-size:34px;font-weight:bold;letter-spacing:8px;color:#2563EB">${escapar(codigo)}</p>
+      <p style="font-size:13px;line-height:1.5;color:#475569;margin:0">Si no creaste una cuenta en AlertaOax, ignora este mensaje.</p>
+    </td></tr>
+  </table></td></tr></table></body></html>`
+  await t.sendMail({
+    from: env.correo.remitente,
+    to: para,
+    subject: `AlertaOax: tu código es ${codigo}`,
+    text: `Hola, ${nombre}.\n\nTu código para confirmar el correo en AlertaOax es: ${codigo}\nVence en ${minutos} minutos.\n\nSi no creaste una cuenta, ignora este mensaje.`,
     html,
   })
   return true

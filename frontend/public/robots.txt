@@ -7,4 +7,4 @@ Disallow: /admin
 Disallow: /autoridad
 Disallow: /restablecer
 
-Sitemap: https://srv2100152.hstgr.cloud/sitemap.xml
+Sitemap: https://alertaoax.com/sitemap.xml

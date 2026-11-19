@@ -15,7 +15,7 @@ function Dato({ etiqueta, valor, icono }) {
     <div className="tarjeta flex items-center gap-3 p-4">
       <span className="icono-caja size-11 bg-acento-claro text-acento dark:text-acento-fuerte"><Icono nombre={icono} tam={24} /></span>
       <span className="flex flex-col">
-        <span className="font-display text-pantalla font-bold leading-none">{valor}</span>
+        <span className="text-pantalla font-bold leading-none">{valor}</span>
         <span className="text-nota text-tenue">{etiqueta}</span>
       </span>
     </div>
@@ -37,7 +37,7 @@ function TarjetaPublicada({ a, onTerminar }) {
               ? <span className="inline-flex items-center gap-1 rounded-full bg-riesgo-bajo-fondo px-2 py-0.5 text-nota font-bold text-ok-texto"><span className="size-1.5 rounded-full bg-riesgo-bajo" aria-hidden="true" /> Vigente</span>
               : <span className="rounded-full bg-hundido px-2 py-0.5 text-nota font-bold text-tinta-suave">Terminada</span>}
           </span>
-          <span className="font-display text-subtitulo font-bold">{a.titulo}</span>
+          <span className="text-subtitulo font-bold">{a.titulo}</span>
           <span className="text-nota text-tenue">
             {TIPOS_ALERTA[a.tipo]} · {a.region} · publicada {haceCuanto(a.emitida_en)} · {a.vigente ? `hasta ${fechaCorta(a.vigente_hasta)}` : `terminó ${fechaCorta(a.vigente_hasta)}`}
           </span>
@@ -45,7 +45,7 @@ function TarjetaPublicada({ a, onTerminar }) {
       </div>
       <div className="flex items-center justify-between gap-3 md:shrink-0 md:justify-end">
         <span className="flex items-center gap-1.5 text-nota text-tinta-suave" title="Personas notificadas">
-          <Icono nombre="campana" tam={18} className="text-tenue" /> <strong className="font-display text-texto">{a.notificados}</strong> notificadas
+          <Icono nombre="campana" tam={18} className="text-tenue" /> <strong className="text-texto">{a.notificados}</strong> notificadas
         </span>
         {a.vigente && (
           <button type="button" onClick={() => onTerminar(a)} className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border-[1.5px] border-riesgo-critico/50 px-3.5 text-nota font-bold text-riesgo-critico-texto hover:bg-riesgo-critico-fondo">

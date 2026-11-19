@@ -23,7 +23,7 @@ export default function Inicio() {
     <div className="flex flex-col gap-5">
       <div>
         <p className="rotulo flex items-center gap-2 text-tenue">
-          <span className="size-2 rounded-full bg-riesgo-bajo shadow-[0_0_0_4px_rgb(5_150_105/0.22)]" aria-hidden="true" /> Estado regional · en vivo
+          <span className="size-2 rounded-full bg-riesgo-bajo shadow-[0_0_0_4px_rgb(5_150_105/0.22)]" aria-hidden="true" /> Estado de tu región
         </p>
         <h2 className="mt-1 text-pantalla font-bold">Región {region}</h2>
       </div>
@@ -40,8 +40,8 @@ export default function Inicio() {
         <AlertaDestacada alerta={principal} />
       ) : (
         <section className="topografia relative flex flex-col gap-3 overflow-hidden rounded-3xl border-2 border-riesgo-bajo/60 bg-riesgo-bajo-fondo p-5 sm:p-6">
-          <p className="flex items-center gap-2 text-nota font-bold tracking-wide text-ok-texto">
-            <Icono nombre="ok" tam={20} peso="fill" /> SIN ALERTAS · VIGILANCIA NORMAL
+          <p className="flex items-center gap-2 text-nota font-bold text-ok-texto">
+            <Icono nombre="ok" tam={20} peso="fill" /> Sin alertas: vigilancia normal
           </p>
           <h1 className="text-titular font-bold">No hay alertas activas en {region}</h1>
           <p className="text-tinta-suave">Aprovecha para revisar tu mochila de emergencia y tu plan familiar.</p>
@@ -62,7 +62,7 @@ export default function Inicio() {
       <section className="flex flex-col gap-2.5">
         <div className="flex items-baseline justify-between">
           <h2 className="text-subtitulo font-bold">Otras alertas en Oaxaca</h2>
-          <span className="rotulo text-tenue">{otras.length} activas</span>
+          <span className="rotulo text-tenue">{otras.length} {otras.length === 1 ? 'activa' : 'activas'}</span>
         </div>
         {otras.length === 0 && <p className="tarjeta px-4 py-4 text-tenue">No hay alertas activas en otras regiones.</p>}
         <div className="grid gap-2.5 lg:grid-cols-2">

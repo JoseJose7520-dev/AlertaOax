@@ -27,7 +27,7 @@ export function AlertaDestacada({ alerta }) {
     >
       <span className={`absolute inset-x-0 top-0 h-2 ${n.clases.solido}`} aria-hidden="true" />
       <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-        <p className={`flex items-center gap-2 rounded-full px-3 py-1 text-nota font-bold tracking-wide ${n.clases.fondo} ${n.clases.texto}`}>
+        <p className={`flex items-center gap-2 rounded-full px-3 py-1 text-nota font-bold ${n.clases.fondo} ${n.clases.texto}`}>
           <Icono nombre={critica ? 'critico' : 'alerta'} tam={18} peso="fill" /> {n.texto}
         </p>
         <span className="rotulo text-tenue">{haceCuanto(alerta.emitida_en)}</span>

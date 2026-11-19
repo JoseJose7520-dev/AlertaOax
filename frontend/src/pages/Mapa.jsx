@@ -40,14 +40,14 @@ function TarjetaAlbergue({ a, activo, masCercano, mostrarRegion, onElegir }) {
         <span className="icono-caja size-11 shrink-0 bg-acento-claro text-acento dark:text-acento-fuerte"><Icono nombre="casa" tam={24} peso={activo ? 'fill' : 'duotone'} /></span>
         <span className="flex min-w-0 flex-1 flex-col gap-1">
           <span className="flex flex-wrap items-center gap-1.5">
-            <span className={`rounded-md px-2 py-0.5 text-[12px] font-bold tracking-wide ${e.clases}`}>{e.texto}</span>
+            <span className={`rounded-md px-2 py-0.5 text-mini font-bold ${e.clases}`}>{e.texto}</span>
             {masCercano && <span className="rotulo text-ok-texto">El más cercano</span>}
           </span>
-          <span className="font-display text-subtitulo font-bold leading-snug">{a.nombre}</span>
+          <span className="text-subtitulo font-bold leading-snug">{a.nombre}</span>
           <span className="text-nota text-tenue">{a.direccion}{mostrarRegion ? ` · ${a.region}` : ''}</span>
         </span>
         <span className="flex shrink-0 flex-col items-end">
-          <span className={`font-display text-pantalla font-bold ${a.libres > 0 ? 'text-ok-texto' : 'text-riesgo-critico-texto'}`}>{Math.max(a.libres, 0)}</span>
+          <span className={`text-pantalla font-bold ${a.libres > 0 ? 'text-ok-texto' : 'text-riesgo-critico-texto'}`}>{Math.max(a.libres, 0)}</span>
           <span className="rotulo text-tenue">libres</span>
         </span>
       </button>
@@ -172,7 +172,7 @@ export default function Mapa() {
   return (
     <div className="flex flex-col gap-3">
       <div>
-        <p className="rotulo text-tenue">Capa geográfica · {todoOaxaca ? 'Oaxaca' : region}</p>
+        <p className="rotulo text-tenue">Mapa de {todoOaxaca ? 'Oaxaca' : region}</p>
         <h1 className="text-titular font-bold">Mapa de riesgos y albergues</h1>
       </div>
 

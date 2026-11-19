@@ -37,6 +37,8 @@ export const env = {
   },
   // Solo para pruebas locales: acepta credenciales falsas "prueba:correo:nombre". Nunca en producción.
   googlePrueba: entorno !== 'production' && process.env.GOOGLE_PRUEBA === '1',
+  // Solo desarrollo y Postman: la respuesta de registro incluye el código (nunca en producción)
+  codigoPrueba: entorno !== 'production' && process.env.CODIGO_PRUEBA === '1',
   // Correo saliente (opcional). Sin SMTP_USER, los enlaces se escriben en la consola del servidor.
   correo: {
     host: process.env.SMTP_HOST || 'smtp.gmail.com',

@@ -34,7 +34,7 @@ export default function Usuarios() {
 
   return (
     <section className="flex max-w-6xl flex-col gap-4">
-      <Encabezado rotulo="Administración · Cuentas" titulo="Usuarios" icono="usuarios">
+      <Encabezado rotulo="Administración" titulo="Usuarios" icono="usuarios">
         Todas las cuentas registradas en AlertaOax. Las autoridades se aprueban en «Autoridades».
       </Encabezado>
       <div className="flex flex-wrap items-center gap-3">
@@ -72,7 +72,7 @@ export default function Usuarios() {
                       <tr key={u.id} className="border-t border-linea align-middle">
                         <td className="px-4 py-3">
                           <span className="flex items-center gap-3">
-                            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-acento-claro font-display font-bold text-acento dark:text-acento-fuerte" aria-hidden="true">
+                            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-acento-claro font-bold text-acento dark:text-acento-fuerte" aria-hidden="true">
                               {u.nombre.trim().charAt(0).toUpperCase()}
                             </span>
                             <span className="min-w-0">

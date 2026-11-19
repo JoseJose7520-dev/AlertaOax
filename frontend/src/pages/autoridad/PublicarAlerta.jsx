@@ -109,7 +109,7 @@ export default function PublicarAlerta() {
                   className={`flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl border-2 font-bold transition ${activo ? `${nv.clases.solido} ${nv.clases.sobre} border-transparent shadow-md` : `${nv.clases.fondo} ${nv.clases.texto} border-transparent hover:border-current`}`}
                 >
                   <span className="flex items-center gap-1.5"><span className={`size-2.5 rounded-full ${activo ? 'bg-current' : nv.clases.solido}`} aria-hidden="true" />{nv.nombre}</span>
-                  <span className="text-[11px] font-semibold tracking-wide opacity-80">ALERTA {nv.color}</span>
+                  <span className="text-mini font-semibold opacity-80">Alerta {nv.color}</span>
                 </button>
               )
             })}
@@ -141,10 +141,10 @@ export default function PublicarAlerta() {
         <h2 className="rotulo flex items-center gap-2 text-tenue"><Icono nombre="ojo" tam={18} /> Así la verá la población</h2>
         <div className={`topografia relative flex flex-col gap-3 overflow-hidden rounded-3xl border-2 bg-superficie p-5 shadow-tarjeta ${n.clases.borde} ${form.nivel === 'critico' ? 'halo-critico' : ''}`}>
           <span className={`absolute inset-x-0 top-0 h-2 ${n.clases.solido}`} aria-hidden="true" />
-          <span className={`mt-1 self-start rounded-full px-3 py-1 text-nota font-bold tracking-wide ${n.clases.fondo} ${n.clases.texto}`}>{n.texto}</span>
+          <span className={`mt-1 self-start rounded-full px-3 py-1 text-nota font-bold ${n.clases.fondo} ${n.clases.texto}`}>{n.texto}</span>
           <span className="flex items-start gap-3">
             <span className={`icono-caja size-12 ${n.clases.fondo} ${n.clases.texto}`}><Icono nombre={ICONO_TIPO[form.tipo]} tam={28} /></span>
-            <span className="font-display text-pantalla font-bold">{form.titulo || 'Título de la alerta'}</span>
+            <span className="text-pantalla font-bold">{form.titulo || 'Título de la alerta'}</span>
           </span>
           <span className="text-texto leading-snug whitespace-pre-line text-tinta-suave">{form.descripcion || 'Indicaciones para la población.'}</span>
           <EscalaNivel nivel={form.nivel} />
@@ -154,7 +154,7 @@ export default function PublicarAlerta() {
 
       <Confirmar
         abierto={confirmando}
-        titulo={`¿Publicar alerta ${n.color.toLowerCase()} (riesgo ${n.nombre.toLowerCase()})?`}
+        titulo={`¿Publicar alerta ${n.color} (riesgo ${n.nombre.toLowerCase()})?`}
         textoConfirmar="Sí, publicar"
         claseConfirmar={`inline-flex min-h-13 items-center justify-center rounded-2xl px-5 text-subtitulo font-bold ${n.clases.sobre} ${n.clases.solido} disabled:opacity-60`}
         enviando={enviando}

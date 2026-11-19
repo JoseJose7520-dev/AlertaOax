@@ -5,6 +5,7 @@ import Aviso from '../components/Aviso.jsx'
 import Campo from '../components/Campo.jsx'
 import Icono from '../components/Icono.jsx'
 import LayoutAcceso from '../components/layout/LayoutAcceso.jsx'
+import { PASSWORD_MAX, PASSWORD_MIN, errorPassword } from '../utils/password.js'
 
 /** Pantalla a la que llega el enlace del correo: crea la nueva contraseña. */
 export default function RestablecerPassword() {
@@ -16,7 +17,7 @@ export default function RestablecerPassword() {
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState('')
 
-  const errPass = password.length < 8 ? 'Usa al menos 8 caracteres.' : ''
+  const errPass = errorPassword(password)
   const errConf = confirmar !== password ? 'Las contraseñas no coinciden.' : ''
 
   async function enviar(e) {
@@ -39,7 +40,7 @@ export default function RestablecerPassword() {
       <div className="flex flex-col gap-2">
         <span className="icono-caja size-14 bg-acento-claro text-acento dark:text-acento-fuerte"><Icono nombre="candado" tam={30} /></span>
         <h2 className="mt-2 text-titular font-bold">Crea tu nueva contraseña</h2>
-        <p className="text-tenue">Usa al menos 8 caracteres. Te recomendamos combinar letras y números.</p>
+        <p className="text-tenue">Usa de {PASSWORD_MIN} a {PASSWORD_MAX} caracteres. Te recomendamos combinar letras y números.</p>
       </div>
       {!token ? (
         <>
@@ -49,9 +50,9 @@ export default function RestablecerPassword() {
       ) : (
         <form onSubmit={enviar} className="flex flex-col gap-4" noValidate>
           <Campo etiqueta="Nueva contraseña" icono="candado" tipo="password" autoComplete="new-password"
-            value={password} onChange={(e) => setPassword(e.target.value)} error={intento ? errPass : undefined} />
+            value={password} onChange={(e) => setPassword(e.target.value)} error={intento ? errPass : undefined} maxLength={PASSWORD_MAX} contador />
           <Campo etiqueta="Confirmar contraseña" icono="candado" tipo="password" autoComplete="new-password"
-            value={confirmar} onChange={(e) => setConfirmar(e.target.value)} error={intento ? errConf : undefined}
+            value={confirmar} onChange={(e) => setConfirmar(e.target.value)} error={intento ? errConf : undefined} maxLength={PASSWORD_MAX} contador
             ayuda={confirmar && !errConf ? '✓ Las contraseñas coinciden' : undefined} />
           <Aviso tipo="error">{error}</Aviso>
           {error.includes('venció') && <Link to="/olvide" className="btn-neutro">Pedir un enlace nuevo</Link>}

@@ -22,6 +22,7 @@ import NoEncontrada from './pages/NoEncontrada.jsx'
 import OlvidePassword from './pages/OlvidePassword.jsx'
 import RestablecerPassword from './pages/RestablecerPassword.jsx'
 import Usuarios from './pages/admin/Usuarios.jsx'
+import Perfil from './pages/Perfil.jsx'
 
 const MENU_AUTORIDAD = [
   { a: '/autoridad', texto: 'Publicar alerta', corto: 'Publicar', icono: 'megafono', exacta: true },
@@ -35,7 +36,7 @@ const MENU_ADMIN = [
   { a: '/autoridad', texto: 'Publicar alerta', corto: 'Publicar', icono: 'megafono' },
 ]
 
-const RUTAS_CIUDADANO = /^\/(mapa|preparate|reportar|reportes|alertas\/.+)?$/
+const RUTAS_CIUDADANO = /^\/(mapa|preparate|reportar|reportes|perfil|alertas\/.+)?$/
 
 /** Elementos presentes en todas las pantallas: franja 911, contacto rápido y aviso de cookies. */
 function Globales() {
@@ -69,6 +70,7 @@ export default function App() {
           <Route path="preparate" element={<Preparate />} />
           <Route path="reportar" element={<Reportar />} />
           <Route path="reportes" element={<MisReportes />} />
+          <Route path="perfil" element={<Perfil />} />
         </Route>
       </Route>
 
@@ -77,6 +79,7 @@ export default function App() {
           <Route index element={<PublicarAlerta />} />
           <Route path="alertas" element={<MisAlertas />} />
           <Route path="reportes" element={<ReportesCiudadanos />} />
+          <Route path="perfil" element={<Perfil />} />
         </Route>
       </Route>
 
@@ -85,6 +88,7 @@ export default function App() {
           <Route index element={<Resumen />} />
           <Route path="autoridades" element={<Autoridades />} />
           <Route path="usuarios" element={<Usuarios />} />
+          <Route path="perfil" element={<Perfil />} />
         </Route>
       </Route>
 
