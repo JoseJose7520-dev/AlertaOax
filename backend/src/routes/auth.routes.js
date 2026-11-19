@@ -3,7 +3,10 @@ import rateLimit from 'express-rate-limit'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { verificarToken } from '../middlewares/verificarToken.js'
 import { bloquearBots } from '../middlewares/antiSpam.js'
-import { accesoGoogle, iniciarSesion, olvidePassword, perfilActual, registrar, restablecerPassword } from '../controllers/auth.controller.js'
+import {
+  accesoGoogle, cambiarMiPassword, editarPerfil, iniciarSesion, olvidePassword, perfilActual, reenviarCodigo,
+  registrar, restablecerPassword, verificarCorreo,
+} from '../controllers/auth.controller.js'
 
 const router = Router()
 
@@ -30,6 +33,10 @@ router.post('/google', limitarIntentos, asyncHandler(accesoGoogle))
 router.post('/olvide', limitarCorreos, bloquearBots, asyncHandler(olvidePassword))
 router.post('/restablecer', limitarIntentos, asyncHandler(restablecerPassword))
 router.post('/login', limitarIntentos, asyncHandler(iniciarSesion))
+router.post('/verificar', limitarIntentos, asyncHandler(verificarCorreo))
+router.post('/reenviar-codigo', limitarCorreos, bloquearBots, asyncHandler(reenviarCodigo))
 router.get('/me', verificarToken, asyncHandler(perfilActual))
+router.patch('/perfil', verificarToken, asyncHandler(editarPerfil))
+router.post('/password', limitarIntentos, verificarToken, asyncHandler(cambiarMiPassword))
 
 export default router

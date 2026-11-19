@@ -20,7 +20,7 @@ function RadarPerdido() {
       <circle cx="160" cy="160" r="5" fill="#2563EB" />
       <circle cx="292" cy="62" r="7" fill="#DC2626" />
       <circle cx="292" cy="62" r="15" fill="none" stroke="#DC2626" strokeOpacity=".5" className="onda-radar" style={{ transformOrigin: '292px 62px' }} />
-      <text x="248" y="98" fill="currentColor" fillOpacity=".7" fontFamily="JetBrains Mono, monospace" fontSize="11">¿?</text>
+      <text x="248" y="98" fill="currentColor" fillOpacity=".7" fontFamily="ui-monospace, Consolas, monospace" fontSize="11">¿?</text>
     </svg>
   )
 }
@@ -31,8 +31,8 @@ export default function NoEncontrada() {
       <Link to="/" className="self-start no-underline" aria-label="AlertaOax, inicio"><Logo /></Link>
       <main className="mx-auto grid w-full max-w-5xl flex-1 items-center gap-8 py-10 md:grid-cols-[1fr_auto]">
         <div className="flex max-w-lg flex-col items-start gap-4">
-          <p className="rotulo flex items-center gap-2 text-riesgo-critico-texto"><Icono nombre="mira" tam={18} /> Señal perdida · Error 404</p>
-          <h1 className="font-display text-[clamp(2.25rem,6vw,3.5rem)] leading-[1.02] font-bold tracking-tight">404 — Ruta fuera del radar</h1>
+          <p className="rotulo flex items-center gap-2 text-riesgo-critico-texto"><Icono nombre="mira" tam={18} /> Error 404</p>
+          <h1 className="text-[clamp(2.25rem,6vw,3.5rem)] leading-[1.02] font-bold">Página no encontrada</h1>
           <p className="text-subtitulo text-tinta-suave">La página que buscas no aparece en nuestro mapa. Puede que el enlace esté mal escrito o que ya no exista.</p>
           <Link to="/" className="btn-principal mt-2"><Icono nombre="campana" tam={22} peso="fill" /> Volver a las alertas</Link>
         </div>

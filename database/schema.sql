@@ -161,3 +161,28 @@ CREATE TABLE IF NOT EXISTS recuperaciones (
   creada_en   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_recuperaciones_usuario ON recuperaciones (usuario_id);
+
+-- ============================================================
+-- AO-411 a AO-415: correcciones de la revisión (verificación de correo y perfil)
+-- ============================================================
+
+-- Las cuentas que ya existían (y el administrador creado por script) quedan verificadas.
+-- Las que se registran con formulario nacen sin verificar (lo indica crearUsuario).
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS correo_verificado BOOLEAN NOT NULL DEFAULT TRUE;
+-- FALSE cuando la cuenta se creó con Google y la persona nunca eligió una contraseña propia.
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS password_definida BOOLEAN NOT NULL DEFAULT TRUE;
+
+-- Código de 6 dígitos para confirmar el correo. Se guarda su hash SHA-256, nunca el código.
+CREATE TABLE IF NOT EXISTS verificaciones_correo (
+  usuario_id   INTEGER PRIMARY KEY REFERENCES usuarios (id) ON DELETE CASCADE,
+  codigo_hash  CHAR(64)    NOT NULL,
+  expira_en    TIMESTAMPTZ NOT NULL,
+  intentos     INTEGER     NOT NULL DEFAULT 0,
+  enviado_en   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Teléfono opcional (10 dígitos) que la persona agrega desde «Mi perfil»
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS telefono VARCHAR(10);
+-- Al cambiar o restablecer la contraseña se cierran todas las sesiones abiertas:
+-- los tokens emitidos antes de esta fecha dejan de servir.
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS sesiones_desde TIMESTAMPTZ;

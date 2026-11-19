@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext.jsx'
 import BotonTema from '../BotonTema.jsx'
 import Icono from '../Icono.jsx'
@@ -11,6 +11,8 @@ import PieLegal from '../PieLegal.jsx'
  */
 export default function LayoutPanel({ titulo, enlaces }) {
   const { usuario, cerrarSesion } = useAuth()
+  // «Mi perfil» vive dentro del panel en el que se está (/autoridad/perfil o /admin/perfil)
+  const base = useLocation().pathname.startsWith('/admin') ? '/admin' : '/autoridad'
   // El administrador también puede publicar alertas: desde ese panel, le damos un regreso a su resumen
   const menu = usuario?.rol === 'administrador' && !enlaces.some((e) => e.a === '/admin')
     ? [...enlaces, { a: '/admin', texto: 'Administración', corto: 'Admin', icono: 'grafica', exacta: true }]
@@ -34,7 +36,9 @@ export default function LayoutPanel({ titulo, enlaces }) {
               <Icono nombre="escudo" tam={16} peso="fill" /> Administrador
             </span>
           )}
-          <span className="hidden font-medium md:inline">{usuario?.nombre}</span>
+          <Link to={`${base}/perfil`} className="inline-flex min-h-11 items-center gap-2 rounded-xl px-2 font-medium text-tinta no-underline hover:bg-hundido" title="Mi perfil">
+            <Icono nombre="perfil" tam={24} /> <span className="hidden md:inline">{usuario?.nombre}</span><span className="sr-only md:hidden">Mi perfil</span>
+          </Link>
           <BotonTema />
           <button type="button" onClick={cerrarSesion} className="btn-neutro min-h-11 text-nota">
             <Icono nombre="salir" tam={18} /> <span className="max-sm:sr-only">Salir</span>

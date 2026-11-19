@@ -8,7 +8,7 @@ export async function obtenerMetricas() {
       (SELECT COUNT(*) FROM alertas)::int                                              AS alertas_total,
       (SELECT COUNT(*) FROM usuarios WHERE rol = 'ciudadano' AND activo)::int          AS ciudadanos,
       (SELECT COUNT(*) FROM autoridades WHERE estado_validacion = 'aprobada')::int     AS autoridades_aprobadas,
-      (SELECT COUNT(*) FROM autoridades WHERE estado_validacion = 'pendiente')::int    AS autoridades_pendientes,
+      (SELECT COUNT(*) FROM autoridades a JOIN usuarios u ON u.id = a.usuario_id WHERE a.estado_validacion = 'pendiente' AND u.correo_verificado)::int AS autoridades_pendientes,
       (SELECT COUNT(*) FROM reportes)::int                                             AS reportes_total,
       (SELECT COUNT(*) FROM reportes WHERE estado <> 'atendido')::int                  AS reportes_abiertos,
       (SELECT COUNT(*) FROM notificaciones)::int                                       AS notificaciones_enviadas`)
@@ -33,10 +33,11 @@ export async function obtenerMetricas() {
 
 export async function listarAutoridades(estado = null) {
   const params = []
-  let filtro = ''
+  // Solo se muestran las solicitudes que ya confirmaron su correo
+  let filtro = 'WHERE u.correo_verificado'
   if (estado) {
     params.push(estado)
-    filtro = 'WHERE a.estado_validacion = $1'
+    filtro += ' AND a.estado_validacion = $1'
   }
   const { rows } = await consulta(
     `SELECT u.id, u.nombre, u.correo, r.nombre AS region, a.institucion, a.estado_validacion,

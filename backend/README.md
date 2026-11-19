@@ -71,6 +71,10 @@ Todas las respuestas de error tienen la forma `{ "mensaje": "..." }`.
 | POST | `/api/auth/google` | Público | Acceso con Google (`credential` de Google Identity Services) |
 | POST | `/api/auth/olvide` | Público | Envía enlace de recuperación (respuesta genérica; 5 por 15 min) |
 | POST | `/api/auth/restablecer` | Público | `{ token, password, confirmarPassword }`; enlace de un solo uso, 30 min |
+| POST | `/api/auth/verificar` | Público | `{ correo, codigo }`; confirma el correo con el código de 6 dígitos (10 min, 5 intentos) |
+| POST | `/api/auth/reenviar-codigo` | Público | `{ correo }`; manda un código nuevo (espera de 60 s entre envíos) |
+| PATCH | `/api/auth/perfil` | Con token | `{ nombre, telefono?, region? }`; teléfono de 10 dígitos opcional; la región solo la cambia el ciudadano |
+| POST | `/api/auth/password` | Con token | `{ actual, password, confirmarPassword }`; cambia la contraseña y cierra todas las sesiones abiertas |
 | GET | `/api/config` | Público | Configuración pública del frontend (`googleClientId`, `contacto`) |
 | POST | `/api/alerts/publish` | Autoridad aprobada, admin | Publica una alerta y notifica a la región (transacción) |
 | GET | `/api/alerts/active` | Con token | Alertas vigentes de la región del usuario (`?todas=1`: todo Oaxaca) |
@@ -100,8 +104,13 @@ Todas las respuestas de error tienen la forma `{ "mensaje": "..." }`.
   "perfil": "ciudadano", "aceptaTerminos": true }
 ```
 
-La contraseña debe tener de 8 a 72 caracteres y `aceptaTerminos` es obligatorio. Para `perfil: "autoridad"` se agrega `"institucion"`. La cuenta de autoridad queda **pendiente**
-hasta que el administrador la valide (AO-401); respuesta `201`: `{ "pendiente": true, "mensaje": "..." }`.
+La contraseña debe tener de 8 a 32 caracteres y `aceptaTerminos` es obligatorio. Se rechazan los correos de dominios de ejemplo
+(`ejemplo.com`, `example.com`, `.test`…). Para `perfil: "autoridad"` se agrega `"institucion"`.
+
+La cuenta nace **sin confirmar**: se envía un código de 6 dígitos al correo y la respuesta `201` es
+`{ "verificarCorreo": true, "correo": "...", "mensaje": "..." }`. Con `POST /api/auth/verificar` el ciudadano recibe su sesión;
+la autoridad queda **pendiente** hasta que el administrador la valide (AO-401). Si se intenta entrar sin confirmar, el login responde
+`403 { "verificarCorreo": true }` y manda un código nuevo. Sin SMTP configurado, el código se escribe en la consola del servidor.
 
 ### POST /api/auth/login
 

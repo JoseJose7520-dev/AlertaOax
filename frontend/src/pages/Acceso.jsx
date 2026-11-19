@@ -9,13 +9,17 @@ import Aviso from '../components/Aviso.jsx'
 import BotonGoogle from '../components/BotonGoogle.jsx'
 import BotonTema from '../components/BotonTema.jsx'
 import Campo from '../components/Campo.jsx'
+import CodigoVerificacion from '../components/CodigoVerificacion.jsx'
 import Icono from '../components/Icono.jsx'
 import ModalTerminos from '../components/ModalTerminos.jsx'
 import PanelIdentidad from '../components/PanelIdentidad.jsx'
 import PieLegal from '../components/PieLegal.jsx'
+import { PASSWORD_MAX, PASSWORD_MIN, errorPassword } from '../utils/password.js'
 
 const VACIO = { nombre: '', correo: '', password: '', confirmar: '', region: '', institucion: '' }
 const REGEX_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+// Dominios de ejemplo que nunca reciben correo (el servidor también los rechaza)
+const DOMINIO_DE_EJEMPLO = /@((.+\.)?(example\.(com|net|org)|ejemplo\.(com|mx|org))|.+\.(test|example|invalid|localhost))$/i
 
 /** Pestañas tipo píldora (Iniciar sesión / Crear cuenta). */
 function Pestanas({ valor, onCambio }) {
@@ -78,7 +82,7 @@ function CasillaTerminos({ marcado, onCambio, onLeer }) {
 }
 
 export default function Acceso() {
-  const { usuario, iniciarSesion, registrar, accesoGoogle } = useAuth()
+  const { usuario, iniciarSesion, registrar, verificarCorreo, accesoGoogle } = useAuth()
   const navegar = useNavigate()
   const ubicacion = useLocation()
   const desde = ubicacion.state?.desde
@@ -90,12 +94,17 @@ export default function Acceso() {
   const [verTerminos, setVerTerminos] = useState(false)
   const [regiones, setRegiones] = useState(REGIONES)
   const [pendienteGoogle, setPendienteGoogle] = useState(null) // { credential, nombre, correo }
+  const [verificando, setVerificando] = useState(null) // { correo, password, aviso } mientras se escribe el código
   const [intento, setIntento] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const [trampa, setTrampa] = useState('')
   const { googleClientId: googleId } = useConfig()
   const [error, setError] = useState('')
-  const [exito, setExito] = useState(ubicacion.state?.exito ?? '')
+  const [exito, setExito] = useState(() => {
+    try { return ubicacion.state?.exito ?? sessionStorage.getItem('avisoAcceso') ?? '' } catch { return ubicacion.state?.exito ?? '' }
+  })
+  // El aviso guardado (p. ej. «Tu contraseña se cambió») se muestra una sola vez
+  useEffect(() => { try { sessionStorage.removeItem('avisoAcceso') } catch { /* sin almacenamiento */ } }, [])
 
   useEffect(() => {
     api.get('/regions').then((r) => setRegiones(r.regiones.map((x) => x.nombre))).catch(() => {})
@@ -111,7 +120,8 @@ export default function Acceso() {
   if (esRegistro) {
     if (form.nombre.trim().length < 2) errores.nombre = 'Escribe tu nombre completo.'
     if (!REGEX_CORREO.test(form.correo.trim())) errores.correo = 'Escribe un correo válido, por ejemplo nombre@gmail.com.'
-    if (form.password.length < 8) errores.password = 'Usa al menos 8 caracteres.'
+    else if (DOMINIO_DE_EJEMPLO.test(form.correo.trim())) errores.correo = 'Ese correo es de ejemplo. Escribe tu correo real: te enviaremos un código.'
+    if (errorPassword(form.password)) errores.password = errorPassword(form.password)
     if (form.confirmar !== form.password) errores.confirmar = 'Las contraseñas no coinciden.'
     if (!form.region) errores.region = 'Elige tu región.'
     if (perfil === 'autoridad' && form.institucion.trim().length < 3) errores.institucion = 'Indica tu institución y cargo.'
@@ -122,7 +132,19 @@ export default function Acceso() {
   const ver = (campo) => (intento ? errores[campo] : undefined)
 
   function cambiarModo(m) {
-    setModo(m); setError(''); setExito(''); setIntento(false); setPendienteGoogle(null)
+    setModo(m); setError(''); setExito(''); setIntento(false); setPendienteGoogle(null); setVerificando(null)
+  }
+
+  // Al confirmar el código: el ciudadano entra directo; la autoridad espera la validación del administrador
+  async function confirmarCodigo(codigo) {
+    const r = await verificarCorreo(verificando.correo, codigo)
+    if (r.pendiente) {
+      setExito(r.mensaje)
+      setVerificando(null); setModo('entrar'); setIntento(false); setAcepta(false)
+      setForm({ ...VACIO, correo: verificando.correo })
+      return
+    }
+    navegar(desde ?? inicioPorRol(r.usuario.rol), { replace: true })
   }
 
   async function enviar(e) {
@@ -136,16 +158,19 @@ export default function Acceso() {
           nombre: form.nombre, correo: form.correo, password: form.password, confirmarPassword: form.confirmar,
           region: form.region, institucion: form.institucion, perfil, aceptaTerminos: acepta, sitio_web: trampa,
         })
-        if (r.pendiente) {
-          setExito(r.mensaje + ' Te avisaremos cuando puedas entrar.')
-          setModo('entrar'); setIntento(false); setAcepta(false)
-          setForm({ ...VACIO, correo: form.correo })
+        if (r.verificarCorreo) {
+          setVerificando({ correo: r.correo, aviso: r.mensaje })
           return
         }
       }
       const u = await iniciarSesion({ correo: form.correo, password: form.password })
       navegar(desde ?? inicioPorRol(u.rol), { replace: true })
     } catch (err) {
+      // Cuenta creada pero sin confirmar: el servidor ya mandó un código nuevo
+      if (err.datos?.verificarCorreo) {
+        setVerificando({ correo: err.datos.correo, aviso: err.message })
+        return
+      }
       setError(err.message)
     } finally {
       setEnviando(false)
@@ -195,7 +220,7 @@ export default function Acceso() {
   return (
     <div className="min-h-[calc(100dvh-2rem)] lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
       <div className="hidden lg:block lg:sticky lg:top-8 lg:h-[calc(100dvh-2rem)]">
-        <PanelIdentidad accion={pendienteGoogle ? null : esRegistro
+        <PanelIdentidad accion={pendienteGoogle || verificando ? null : esRegistro
           ? { texto: 'Ya tengo cuenta: iniciar sesión', alHacer: () => cambiarModo('entrar') }
           : { texto: 'Crear mi cuenta gratis', alHacer: () => cambiarModo('registro') }} />
       </div>
@@ -204,7 +229,17 @@ export default function Acceso() {
       <div className="relative flex flex-col px-5 pt-6 pb-24 sm:px-10 lg:min-h-[calc(100dvh-2rem)] lg:justify-center lg:py-12">
         <BotonTema className="absolute top-4 right-4 sm:top-6 sm:right-6" />
         <div className="mx-auto flex w-full max-w-md flex-col gap-6">
-          {pendienteGoogle ? (
+          {verificando ? (
+            <CodigoVerificacion
+              key={verificando.correo}
+              correo={verificando.correo}
+              aviso={verificando.aviso}
+              onVerificar={confirmarCodigo}
+              onReenviar={() => api.post('/auth/reenviar-codigo', { correo: verificando.correo, sitio_web: trampa })}
+              onCambiarCorreo={() => { setVerificando(null); setModo('registro'); setError(''); setExito('') }}
+              onVolver={() => cambiarModo('entrar')}
+            />
+          ) : pendienteGoogle ? (
             <form onSubmit={terminarGoogle} className="flex flex-col gap-5" noValidate>
               <div>
                 <p className="rotulo text-acento dark:text-acento-fuerte">Último paso</p>
@@ -234,13 +269,14 @@ export default function Acceso() {
                   <Campo etiqueta="Nombre completo" icono="perfil" autoComplete="name" value={form.nombre} onChange={cambiar('nombre')} error={ver('nombre')} />
                 )}
                 <Campo etiqueta="Correo electrónico" icono="correo" tipo="email" autoComplete="email" inputMode="email"
-                  placeholder="tucorreo@ejemplo.com" value={form.correo} onChange={cambiar('correo')} error={ver('correo')} />
+                  placeholder="nombre@gmail.com" value={form.correo} onChange={cambiar('correo')} error={ver('correo')} />
                 <Campo etiqueta="Contraseña" icono="candado" tipo="password" autoComplete={esRegistro ? 'new-password' : 'current-password'}
-                  placeholder={esRegistro ? 'Mínimo 8 caracteres' : ''} value={form.password} onChange={cambiar('password')} error={ver('password')}
+                  placeholder={esRegistro ? `De ${PASSWORD_MIN} a ${PASSWORD_MAX} caracteres` : ''} value={form.password} onChange={cambiar('password')} error={ver('password')}
+                  maxLength={esRegistro ? PASSWORD_MAX : undefined} contador={esRegistro}
                   extra={!esRegistro && <Link to="/olvide" state={{ correo: form.correo }} className="text-nota font-bold">¿Olvidaste tu contraseña?</Link>} />
                 {esRegistro && (
                   <Campo etiqueta="Confirmar contraseña" icono="candado" tipo="password" autoComplete="new-password"
-                    value={form.confirmar} onChange={cambiar('confirmar')} error={ver('confirmar')}
+                    value={form.confirmar} onChange={cambiar('confirmar')} error={ver('confirmar')} maxLength={PASSWORD_MAX} contador
                     ayuda={form.confirmar && form.confirmar === form.password ? '✓ Las contraseñas coinciden' : undefined} />
                 )}
                 {esRegistro && selectorRegion}

@@ -15,7 +15,7 @@ function Cifra({ etiqueta, valor, icono, color, destacada = false, a }) {
         <span className={`icono-caja size-11 ${color}`}><Icono nombre={icono} tam={24} /></span>
         {a && <Icono nombre="flecha" tam={18} className="text-tenue" />}
       </span>
-      <span className="font-display text-cifra font-bold">{valor}</span>
+      <span className="text-cifra font-bold">{valor}</span>
       <span className={`text-nota font-semibold ${destacada ? 'text-acento dark:text-acento-fuerte' : 'text-tenue'}`}>{etiqueta}</span>
     </>
   )
@@ -37,7 +37,7 @@ function Barras({ titulo, icono, filas, color = 'bg-acento' }) {
             <span className="h-3 overflow-hidden rounded-full bg-hundido" aria-hidden="true">
               <span className={`block h-full rounded-full ${f.color ?? color}`} style={{ width: `${(f.total / max) * 100}%`, backgroundImage: f.color ? undefined : 'linear-gradient(90deg,#2563EB,#0891B2)' }} />
             </span>
-            <strong className="text-right font-display">{f.total}</strong>
+            <strong className="text-right">{f.total}</strong>
           </li>
         ))}
       </ul>
@@ -84,7 +84,7 @@ export default function Resumen() {
 
   return (
     <div className="flex max-w-6xl flex-col gap-6">
-      <Encabezado rotulo="Sala de situación · Oaxaca" titulo="Resumen" icono="grafica">
+      <Encabezado rotulo="Panel de administración" titulo="Resumen" icono="grafica">
         Indicadores en tiempo real de alertas, ciudadanos y reportes en las 8 regiones.
       </Encabezado>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3.5">

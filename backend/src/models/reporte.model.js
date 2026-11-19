@@ -3,7 +3,7 @@ import { consulta } from '../config/db.js'
 const SELECT_REPORTE = `
   SELECT rp.id, rp.tipo, rp.descripcion, rp.latitud::float AS latitud, rp.longitud::float AS longitud,
          rp.referencia, rp.estado, rp.nota_autoridad, rp.creado_en, rp.actualizado_en,
-         r.nombre AS region, u.nombre AS ciudadano
+         r.nombre AS region, u.nombre AS ciudadano, u.telefono AS telefono_ciudadano
   FROM reportes rp
   JOIN regiones r ON r.id = rp.region_id
   JOIN usuarios u ON u.id = rp.usuario_id`

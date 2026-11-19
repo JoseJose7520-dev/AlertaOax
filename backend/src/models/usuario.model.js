@@ -1,7 +1,7 @@
 import { consulta, pool } from '../config/db.js'
 
 const SELECT_USUARIO = `
-  SELECT u.id, u.nombre, u.correo, u.password_hash, u.rol, u.activo, u.google_sub,
+  SELECT u.id, u.nombre, u.correo, u.password_hash, u.rol, u.activo, u.google_sub, u.correo_verificado, u.password_definida, u.telefono, u.creado_en,
          r.nombre AS region,
          a.institucion, a.estado_validacion
   FROM usuarios u
@@ -18,28 +18,58 @@ export async function buscarPorId(id) {
   return rows[0] ?? null
 }
 
-/** Crea el usuario y, si es autoridad, su registro pendiente de validación (en una sola transacción). */
 export async function buscarPorGoogle(sub) {
   const { rows } = await consulta(`${SELECT_USUARIO} WHERE u.google_sub = $1`, [sub])
   return rows[0] ?? null
 }
 
-export async function vincularGoogle(id, sub) {
-  await consulta('UPDATE usuarios SET google_sub = $2 WHERE id = $1 AND google_sub IS NULL', [id, sub])
+/**
+ * Vincula la cuenta de Google. Google ya confirmó el correo, así que la cuenta queda verificada.
+ * Si la cuenta aún no estaba verificada, su contraseña la pudo haber puesto cualquiera que escribió ese correo:
+ * se reemplaza por `hashAleatorio` para que nadie más pueda entrar con ella.
+ */
+export async function vincularGoogle(id, sub, hashAleatorio) {
+  await consulta(
+    `UPDATE usuarios SET
+       google_sub = COALESCE(google_sub, $2),
+       password_hash = CASE WHEN correo_verificado THEN password_hash ELSE $3 END,
+       password_definida = CASE WHEN correo_verificado THEN password_definida ELSE FALSE END,
+       correo_verificado = TRUE
+     WHERE id = $1`,
+    [id, sub, hashAleatorio],
+  )
 }
 
 export async function cambiarPassword(id, passwordHash) {
-  await consulta('UPDATE usuarios SET password_hash = $2 WHERE id = $1', [id, passwordHash])
+  await consulta('UPDATE usuarios SET password_hash = $2, password_definida = TRUE, sesiones_desde = NOW() WHERE id = $1', [id, passwordHash])
 }
 
-export async function crearUsuario({ nombre, correo, passwordHash, rol, regionId, institucion, googleSub = null }) {
+export async function marcarCorreoVerificado(id) {
+  await consulta('UPDATE usuarios SET correo_verificado = TRUE WHERE id = $1', [id])
+}
+
+/** Datos que la persona puede cambiar desde «Mi perfil». La región solo se manda para ciudadanos. */
+export async function actualizarPerfil(id, { nombre, telefono, regionId }) {
+  await consulta(
+    'UPDATE usuarios SET nombre = $2, telefono = $3, region_id = COALESCE($4, region_id) WHERE id = $1',
+    [id, nombre, telefono || null, regionId ?? null],
+  )
+}
+
+/** Borra una cuenta que nunca confirmó su correo (para poder registrarse de nuevo con ese correo). */
+export async function borrarSinVerificar(id) {
+  await consulta('DELETE FROM usuarios WHERE id = $1 AND correo_verificado = FALSE', [id])
+}
+
+/** Crea el usuario y, si es autoridad, su registro pendiente de validación (en una sola transacción). */
+export async function crearUsuario({ nombre, correo, passwordHash, rol, regionId, institucion, googleSub = null, correoVerificado = true, passwordDefinida = true }) {
   const cliente = await pool.connect()
   try {
     await cliente.query('BEGIN')
     const { rows } = await cliente.query(
-      `INSERT INTO usuarios (nombre, correo, password_hash, rol, region_id, google_sub, terminos_aceptados_en)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING id`,
-      [nombre, correo, passwordHash, rol, regionId, googleSub],
+      `INSERT INTO usuarios (nombre, correo, password_hash, rol, region_id, google_sub, correo_verificado, password_definida, terminos_aceptados_en)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW()) RETURNING id`,
+      [nombre, correo, passwordHash, rol, regionId, googleSub, correoVerificado, passwordDefinida],
     )
     const id = rows[0].id
     if (rol === 'autoridad') {

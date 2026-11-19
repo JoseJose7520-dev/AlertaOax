@@ -56,7 +56,7 @@ export default function SelectorRegion({ valor, propia, onCambio }) {
                     onClick={() => { onCambio(r); setAbierto(false) }}
                     className={`flex min-h-11 w-full items-center gap-2 rounded-xl px-3 text-left font-semibold ${sel ? 'bg-acento text-white' : 'text-tinta hover:bg-hundido'}`}>
                     <span className="flex-1 leading-tight">{r}</span>
-                    {r === propia && <span className={`rounded-full px-1.5 py-0.5 text-[11px] font-bold ${sel ? 'bg-white/20 text-white' : 'bg-acento-claro text-acento dark:text-acento-fuerte'}`}>Tu región</span>}
+                    {r === propia && <span className={`rounded-full px-1.5 py-0.5 text-mini font-bold ${sel ? 'bg-white/20 text-white' : 'bg-acento-claro text-acento dark:text-acento-fuerte'}`}>Tu región</span>}
                   </button>
                 </li>
               )

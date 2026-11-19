@@ -39,9 +39,9 @@ export default function DetalleAlerta() {
       </button>
 
       <div className="tarjeta overflow-hidden">
-      <p className={`flex items-center gap-2.5 px-5 py-3 text-texto font-bold tracking-wide ${n.clases.solido} ${n.clases.sobre}`}>
-        <Icono nombre={a.nivel === 'critico' ? 'critico' : 'alerta'} tam={22} peso="fill" /> ALERTA {n.color} · {n.nombre.toUpperCase()}
-        {!a.vigente && <span className="ml-auto rounded-full bg-black/20 px-2 py-0.5 text-nota">TERMINÓ</span>}
+      <p className={`flex items-center gap-2.5 px-5 py-3 text-texto font-bold ${n.clases.solido} ${n.clases.sobre}`}>
+        <Icono nombre={a.nivel === 'critico' ? 'critico' : 'alerta'} tam={22} peso="fill" /> Alerta {n.color}: {n.nombre.toLowerCase()}
+        {!a.vigente && <span className="ml-auto rounded-full bg-black/20 px-2 py-0.5 text-nota">Terminó</span>}
       </p>
 
       <div className="topografia flex flex-col gap-5 px-5 py-5 sm:px-6">
@@ -75,7 +75,7 @@ export default function DetalleAlerta() {
           <ol className="flex flex-col gap-2.5">
             {pasos.map(([fuerte, resto], i) => (
               <li key={fuerte} className="flex items-start gap-3 rounded-xl border border-linea bg-superficie p-3">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-acento font-display text-texto font-bold text-white">{i + 1}</span>
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-acento text-texto font-bold text-white">{i + 1}</span>
                 <span className="leading-snug"><strong>{fuerte}</strong> {resto}</span>
               </li>
             ))}

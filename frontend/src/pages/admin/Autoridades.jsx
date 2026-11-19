@@ -14,7 +14,7 @@ export default function Autoridades() {
 
   return (
     <section className="flex max-w-5xl flex-col gap-4">
-      <Encabezado rotulo="Administración · Validación" titulo="Solicitudes de autoridad" icono="escudo"
+      <Encabezado rotulo="Administración" titulo="Solicitudes de autoridad" icono="escudo"
         acciones={<Link to="/admin/usuarios" className="btn-neutro"><Icono nombre="usuarios" tam={20} /> Ver todas las cuentas</Link>}>
         Antes de aprobar, confirma por teléfono o correo institucional que la persona trabaja donde dice.
       </Encabezado>

@@ -44,10 +44,10 @@ export default function ListaSolicitudes({ autoridades, onDecidido, onError }) {
           return (
             <li key={a.id} className="tarjeta flex flex-col gap-3 p-4 md:flex-row md:items-center md:gap-4">
               <div className="flex min-w-0 flex-1 items-start gap-3">
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-acento-claro font-display font-bold text-acento dark:text-acento-fuerte" aria-hidden="true">{iniciales(a.nombre)}</span>
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-acento-claro font-bold text-acento dark:text-acento-fuerte" aria-hidden="true">{iniciales(a.nombre)}</span>
                 <div className="flex min-w-0 flex-col gap-0.5">
                   <span className="flex flex-wrap items-center gap-2">
-                    <strong className="font-display text-subtitulo">{a.nombre}</strong>
+                    <strong className="text-subtitulo">{a.nombre}</strong>
                     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-nota font-bold ${e.clases}`}><Icono nombre={e.icono} tam={14} peso="bold" /> {e.texto}</span>
                   </span>
                   <span className="flex items-center gap-1.5 text-tinta-suave"><Icono nombre="escudo" tam={16} className="shrink-0 text-tenue" /> {a.institucion}</span>

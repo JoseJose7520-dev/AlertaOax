@@ -64,7 +64,7 @@ function Mochila({ marcados, alternar, guardando }) {
       <section className="tarjeta flex flex-col gap-2.5 p-4">
         <div className="flex items-baseline justify-between">
           <h2 className="flex items-center gap-2 text-subtitulo font-bold"><Icono nombre="mochila" tam={24} className="text-acento dark:text-acento-fuerte" /> Tu mochila de emergencia</h2>
-          <span className="font-display text-pantalla font-bold">{hechos}<span className="text-texto text-tenue"> de {MOCHILA.length}</span></span>
+          <span className="text-pantalla font-bold">{hechos}<span className="text-texto text-tenue"> de {MOCHILA.length}</span></span>
         </div>
         <div className="h-2.5 overflow-hidden rounded-full bg-hundido" role="progressbar" aria-valuemin={0} aria-valuemax={MOCHILA.length} aria-valuenow={hechos} aria-label="Avance de la mochila">
           <div className="h-full rounded-full transition-all" style={{ width: `${(hechos / MOCHILA.length) * 100}%`, backgroundImage: 'linear-gradient(90deg,#2563EB,#0891B2)' }} />

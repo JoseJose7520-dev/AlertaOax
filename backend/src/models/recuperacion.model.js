@@ -29,7 +29,11 @@ export async function usarRecuperacion(tokenHash, passwordHash) {
       return null
     }
     const usuarioId = rows[0].usuario_id
-    await cliente.query('UPDATE usuarios SET password_hash = $2 WHERE id = $1', [usuarioId, passwordHash])
+    // Abrir el enlace del correo también demuestra que el correo es suyo
+    await cliente.query(
+      'UPDATE usuarios SET password_hash = $2, password_definida = TRUE, correo_verificado = TRUE, sesiones_desde = NOW() WHERE id = $1',
+      [usuarioId, passwordHash],
+    )
     await cliente.query('COMMIT')
     return usuarioId
   } catch (err) {

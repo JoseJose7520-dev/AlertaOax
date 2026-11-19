@@ -44,7 +44,7 @@ export default function PanelIdentidad({ compacto = false, accion = null }) {
       <div className="topografia topografia-clara relative overflow-hidden bg-abisal px-5 pt-6 pb-8 text-white">
         <Radar className="pointer-events-none absolute -top-24 -right-24 size-72 opacity-70" />
         <Logo tam={40} claro />
-        <p className="mt-4 max-w-xs font-display text-[26px] leading-tight font-bold">Alertas oficiales para las 8 regiones de Oaxaca</p>
+        <p className="mt-4 max-w-xs text-[26px] leading-tight font-bold">Alertas oficiales para las 8 regiones de Oaxaca</p>
       </div>
     )
   }
@@ -56,7 +56,7 @@ export default function PanelIdentidad({ compacto = false, accion = null }) {
         <p className="rotulo flex items-center gap-2 text-cyan-300">
           <span className="size-2 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgb(52_211_153/0.25)]" /> Monitoreo regional activo
         </p>
-        <h1 className="max-w-lg font-display text-[40px] leading-[1.05] font-bold xl:text-[46px]">
+        <h1 className="max-w-lg text-[40px] leading-[1.05] font-bold xl:text-[46px]">
           Monitoreo ciudadano y alertas oficiales en tiempo real para las 8 regiones de Oaxaca
         </h1>
         <ul className="flex flex-wrap gap-2.5">

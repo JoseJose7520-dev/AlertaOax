@@ -44,7 +44,12 @@ function Reporte({ reporte, alActualizar }) {
           <span className="icono-caja size-11 bg-acento-claro text-acento dark:text-acento-fuerte"><Icono nombre={ICONO_TIPO[reporte.tipo]} tam={24} /></span>
           <div className="flex flex-col gap-0.5">
             <h2 className="font-bold">{TIPOS_REPORTE[reporte.tipo]} <span className="rotulo text-tenue">#{reporte.id}</span></h2>
-            <span className="text-nota text-tenue">{reporte.ciudadano} · {fechaCorta(reporte.creado_en)}</span>
+            <span className="text-nota text-tenue">
+              {reporte.ciudadano} · {fechaCorta(reporte.creado_en)}
+              {reporte.telefono_ciudadano && (
+                <> · <a href={`tel:${reporte.telefono_ciudadano}`} className="font-semibold">Llamar al {reporte.telefono_ciudadano}</a></>
+              )}
+            </span>
           </div>
         </div>
         <span className={`rounded-full px-2.5 py-1 text-nota font-bold ${e.clases}`}>{e.nombre}</span>
@@ -82,7 +87,7 @@ export default function ReportesCiudadanos() {
 
   return (
     <section className="flex max-w-3xl flex-col gap-4">
-      <Encabezado rotulo="Panel de autoridad · Atención" titulo="Reportes ciudadanos" icono="reporte">
+      <Encabezado rotulo="Panel de autoridad" titulo="Reportes ciudadanos" icono="reporte">
         Incidentes que reportó la población de tu región. Deja una nota para que sepan qué se está haciendo.
       </Encabezado>
       <Filtros etiqueta="Filtrar por estado" valor={filtro} onCambio={setFiltro} opciones={FILTROS.map((f) => [f.valor, f.texto])} />

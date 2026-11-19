@@ -8,7 +8,7 @@ export function noEncontrado(req, res) {
 // eslint-disable-next-line no-unused-vars
 export function manejadorErrores(err, req, res, next) {
   if (err instanceof ErrorHttp) {
-    return res.status(err.estado).json({ mensaje: err.message })
+    return res.status(err.estado).json({ ...err.datos, mensaje: err.message })
   }
   if (err.type === 'entity.parse.failed') {
     return res.status(400).json({ mensaje: 'El cuerpo de la petición no es un JSON válido.' })

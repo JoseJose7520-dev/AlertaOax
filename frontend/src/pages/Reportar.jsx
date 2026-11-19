@@ -115,7 +115,7 @@ export default function Reportar() {
             <li key={t} className="flex flex-col gap-1.5">
               <span className={`h-2 rounded-full ${paso >= n ? 'bg-acento' : 'bg-linea'}`} aria-hidden="true" />
               <span className={`flex items-center gap-1.5 text-nota ${actual ? 'font-bold text-tinta' : 'text-tenue'}`}>
-                <span className={`flex size-5 items-center justify-center rounded-full text-[11px] font-bold ${hecho || actual ? 'bg-acento text-white' : 'bg-linea text-tenue'}`}>{hecho ? '✓' : n}</span>
+                <span className={`flex size-5 items-center justify-center rounded-full text-mini font-bold ${hecho || actual ? 'bg-acento text-white' : 'bg-linea text-tenue'}`}>{hecho ? '✓' : n}</span>
                 <span className="truncate">{t}</span>
               </span>
             </li>
