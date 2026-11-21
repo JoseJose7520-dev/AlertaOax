@@ -74,6 +74,7 @@ Todas las respuestas de error tienen la forma `{ "mensaje": "..." }`.
 | POST | `/api/auth/verificar` | Público | `{ correo, codigo }`; confirma el correo con el código de 6 dígitos (10 min, 5 intentos) |
 | POST | `/api/auth/reenviar-codigo` | Público | `{ correo }`; manda un código nuevo (espera de 60 s entre envíos) |
 | PATCH | `/api/auth/perfil` | Con token | `{ nombre, telefono?, region? }`; teléfono de 10 dígitos opcional; la región solo la cambia el ciudadano |
+| PATCH | `/api/auth/avisos` | Con token | `{ avisosCorreo: true/false }`: aviso por correo de alertas críticas y altas de la región |
 | POST | `/api/auth/password` | Con token | `{ actual, password, confirmarPassword }`; cambia la contraseña y cierra todas las sesiones abiertas |
 | GET | `/api/config` | Público | Configuración pública del frontend (`googleClientId`, `contacto`) |
 | POST | `/api/alerts/publish` | Autoridad aprobada, admin | Publica una alerta y notifica a la región (transacción) |
@@ -138,3 +139,8 @@ router.post('/publish', verificarToken, verificarRol('autoridad', 'administrador
 - Honeypot anti-spam: registro y «olvidé mi contraseña» rechazan envíos que llenan el campo oculto `sitio_web`.
 - Límite de 30 intentos por 15 minutos en registro y login.
 - `JWT_SECRET` obligatorio (mínimo 16 caracteres) y `.env` fuera de Git.
+
+
+### Aviso por correo de alertas críticas y altas
+
+Al publicar una alerta de nivel **crítico** o **alto**, la API envía en segundo plano un correo (en copia oculta, por lotes de 50) a las cuentas de esa región con el correo confirmado y los avisos activados (`usuarios.avisos_correo`, se cambia en «Mi perfil»). Quien publica no espera el envío; el resultado queda en `pm2 logs` como `[correo] Aviso de alerta N: X correo(s) enviados`.

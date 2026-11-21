@@ -1,8 +1,10 @@
+import { enviarAvisoAlerta } from '../utils/correo.js'
+import { env } from '../config/env.js'
 import ErrorHttp from '../utils/ErrorHttp.js'
 import { buscarPorId } from '../models/usuario.model.js'
 import { buscarRegionPorNombre } from '../models/region.model.js'
 import {
-  autorDeAlerta, buscarAlerta, finalizarAlerta, listarActivas, listarPorAutor, publicarAlerta,
+  autorDeAlerta, buscarAlerta, correosParaAviso, finalizarAlerta, listarActivas, listarPorAutor, publicarAlerta,
 } from '../models/alerta.model.js'
 
 export const TIPOS = ['sismo', 'huracan', 'inundacion', 'deslizamiento', 'otro']
@@ -46,7 +48,18 @@ export async function publicar(req, res) {
     autoridadId: req.usuario.id, regionId: region.id, tipo, nivel, titulo, descripcion, vigenteHasta: vigente.toISOString(),
   })
   const alerta = await buscarAlerta(alertaId)
-  res.status(201).json({ alerta, notificados, mensaje: `Alerta publicada. Se notificó a ${notificados} persona(s).` })
+
+  // Alertas críticas y altas: además se avisa por correo (en segundo plano, sin hacer esperar a quien publica)
+  let avisosCorreo = 0
+  if (nivel === 'critico' || nivel === 'alto') {
+    const destinatarios = await correosParaAviso(region.id, req.usuario.id)
+    avisosCorreo = destinatarios.length
+    enviarAvisoAlerta({ destinatarios, alerta, enlace: `${env.appUrl}/alertas/${alertaId}` })
+      .then((n) => console.log(`[correo] Aviso de alerta ${alertaId}: ${n} correo(s) enviados.`))
+      .catch((err) => console.error(`[correo] No se pudo enviar el aviso de la alerta ${alertaId}:`, err.message))
+  }
+  const extra = avisosCorreo ? ` y se envía aviso por correo a ${avisosCorreo}` : ''
+  res.status(201).json({ alerta, notificados, avisosCorreo, mensaje: `Alerta publicada. Se notificó a ${notificados} persona(s)${extra}.` })
 }
 
 /**

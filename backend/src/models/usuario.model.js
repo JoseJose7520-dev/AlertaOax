@@ -1,7 +1,7 @@
 import { consulta, pool } from '../config/db.js'
 
 const SELECT_USUARIO = `
-  SELECT u.id, u.nombre, u.correo, u.password_hash, u.rol, u.activo, u.google_sub, u.correo_verificado, u.password_definida, u.telefono, u.creado_en,
+  SELECT u.id, u.nombre, u.correo, u.password_hash, u.rol, u.activo, u.google_sub, u.correo_verificado, u.password_definida, u.telefono, u.avisos_correo, u.creado_en,
          r.nombre AS region,
          a.institucion, a.estado_validacion
   FROM usuarios u
@@ -83,4 +83,9 @@ export async function crearUsuario({ nombre, correo, passwordHash, rol, regionId
   } finally {
     cliente.release()
   }
+}
+
+/** Activa o desactiva los avisos por correo de alertas críticas y altas. */
+export async function cambiarAvisosCorreo(id, activo) {
+  await consulta('UPDATE usuarios SET avisos_correo = $2 WHERE id = $1', [id, activo])
 }

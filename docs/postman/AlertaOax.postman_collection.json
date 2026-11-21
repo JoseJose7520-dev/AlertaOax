@@ -1045,6 +1045,164 @@
           ]
         },
         {
+          "name": "Desactivar avisos por correo",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/avisos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "avisos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"avisosCorreo\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCiudadano}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Quedan desactivados\", () => pm.expect(pm.response.json().usuario.avisosCorreo).to.eql(false));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Activar avisos por correo",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/avisos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "avisos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"avisosCorreo\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCiudadano}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Quedan activados\", () => pm.expect(pm.response.json().usuario.avisosCorreo).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Avisos con valor inválido (debe fallar)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/avisos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "avisos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"avisosCorreo\": \"si\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCiudadano}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Olvidé mi contraseña (respuesta genérica)",
           "request": {
             "method": "POST",
@@ -1521,7 +1679,8 @@
                   "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
                   "const j = pm.response.json();",
                   "pm.test(\"Se notificó al menos a 1 persona\", () => pm.expect(j.notificados).to.be.at.least(1));",
-                  "pm.collectionVariables.set(\"alertaId\", j.alerta.id);"
+                  "pm.collectionVariables.set(\"alertaId\", j.alerta.id);",
+                  "pm.test(\"Informa los avisos por correo\", () => pm.expect(pm.response.json().avisosCorreo).to.be.a(\"number\"));"
                 ]
               }
             }

@@ -104,6 +104,51 @@ function DatosPersonales() {
 }
 
 /** Cambio de contraseña. Una cuenta creada con Google que nunca tuvo contraseña la crea sin escribir la actual. */
+/** Aviso por correo de alertas críticas y altas de la región. Se guarda al momento. */
+function AvisosCorreo() {
+  const { usuario, actualizarUsuario } = useAuth()
+  const [guardando, setGuardando] = useState(false)
+  const [error, setError] = useState('')
+  const [exito, setExito] = useState('')
+  const activo = usuario.avisosCorreo !== false
+
+  async function cambiar() {
+    setGuardando(true); setError(''); setExito('')
+    try {
+      const r = await api.patch('/auth/avisos', { avisosCorreo: !activo })
+      actualizarUsuario(r.usuario)
+      setExito(r.mensaje)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setGuardando(false)
+    }
+  }
+
+  return (
+    <section className="tarjeta flex flex-col gap-3 p-5" aria-labelledby="avisos-titulo">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <span className="icono-caja size-11 shrink-0 bg-riesgo-critico-fondo text-riesgo-critico-texto"><Icono nombre="correo" tam={22} /></span>
+          <div>
+            <h2 id="avisos-titulo" className="text-subtitulo font-bold">Avisos por correo</h2>
+            <p className="text-nota text-tenue">Recibe un correo cuando se publique una alerta <strong>crítica o alta</strong> en {usuario.region ? <>la región <strong>{usuario.region}</strong></> : 'tu región'}, aunque no tengas la app abierta.</p>
+          </div>
+        </div>
+        <button
+          type="button" role="switch" aria-checked={activo} aria-labelledby="avisos-titulo" onClick={cambiar} disabled={guardando}
+          className={`relative inline-flex h-8 w-14 shrink-0 items-center rounded-full transition ${activo ? 'bg-acento' : 'bg-linea-fuerte'} disabled:opacity-60`}
+        >
+          <span className={`inline-block size-6 rounded-full bg-white shadow transition ${activo ? 'translate-x-7' : 'translate-x-1'}`} />
+        </button>
+      </div>
+      <p className="text-nota font-semibold">{activo ? 'Activados' : 'Desactivados'}</p>
+      <Aviso tipo="error">{error}</Aviso>
+      <Aviso tipo="exito">{exito}</Aviso>
+    </section>
+  )
+}
+
 function CambiarPassword() {
   const { usuario, cerrarSesion } = useAuth()
   const tiene = usuario.tienePassword !== false
@@ -204,6 +249,7 @@ export default function Perfil() {
       </section>
 
       <DatosPersonales />
+      <AvisosCorreo />
       <CambiarPassword />
 
       <button type="button" onClick={cerrarSesion} className="btn-neutro self-start">

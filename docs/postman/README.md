@@ -6,6 +6,6 @@
    `npm run crear-admin -- "Administrador AlertaOax" admin@alertaoax.mx Admin12345`
 4. Clic derecho en la colección → **Run collection** → **Run AlertaOax**.
 
-Resultado esperado: 54 peticiones y 136 pruebas en verde. La colección cubre registro (términos, honeypot anti-spam, contraseñas que no coinciden, 8 a 32 caracteres, correo de ejemplo, verificación con código de 6 dígitos, correo duplicado), Mi perfil, acceso por rol, recuperación de contraseña, validación de autoridades, lista de usuarios, alertas, notificaciones, mapa, reportes y plan familiar.
+Resultado esperado: 57 peticiones y 145 pruebas en verde. La colección cubre registro (términos, honeypot anti-spam, contraseñas que no coinciden, 8 a 32 caracteres, correo de ejemplo, verificación con código de 6 dígitos, correo duplicado), Mi perfil y avisos por correo, acceso por rol, recuperación de contraseña, validación de autoridades, lista de usuarios, alertas, notificaciones, mapa, reportes y plan familiar.
 
-Para probar el servidor publicado, cambia `baseUrl` del entorno por `https://alertaoax.com/api`.
+Para probar el servidor publicado, cambia `baseUrl` del entorno por `https://alertaoax.duckdns.org/api`.
