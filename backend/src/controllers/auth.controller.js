@@ -5,8 +5,7 @@ import ErrorHttp from '../utils/ErrorHttp.js'
 import crypto from 'node:crypto'
 import {
   actualizarPerfil, borrarSinVerificar, buscarPorCorreo, buscarPorGoogle, buscarPorId, cambiarPassword,
-  crearUsuario, marcarCorreoVerificado, vincularGoogle,
-} from '../models/usuario.model.js'
+  crearUsuario, marcarCorreoVerificado, vincularGoogle, cambiarAvisosCorreo } from '../models/usuario.model.js'
 import { buscarRegionPorNombre } from '../models/region.model.js'
 import { crearRecuperacion, usarRecuperacion } from '../models/recuperacion.model.js'
 import { comprobarCodigo, guardarCodigo, segundosDesdeEnvio } from '../models/verificacion.model.js'
@@ -29,7 +28,7 @@ const texto = (valor) => (typeof valor === 'string' ? valor.trim() : '')
 const datosPublicos = (u) => ({
   id: u.id, nombre: u.nombre, correo: u.correo, rol: u.rol, region: u.region,
   tienePassword: u.password_definida !== false, conGoogle: Boolean(u.google_sub),
-  telefono: u.telefono ?? '', creadoEn: u.creado_en,
+  telefono: u.telefono ?? '', avisosCorreo: u.avisos_correo !== false, creadoEn: u.creado_en,
 })
 const hashToken = (t) => crypto.createHash('sha256').update(t).digest('hex')
 // El código se guarda con HMAC (y el id de la cuenta), así una copia de la base no basta para adivinarlo.
@@ -310,5 +309,18 @@ export async function cambiarMiPassword(req, res) {
     mensaje: usuario.password_definida
       ? 'Tu contraseña se cambió. Inicia sesión con la nueva contraseña.'
       : 'Listo. Inicia sesión con tu correo y tu nueva contraseña.',
+  })
+}
+
+/**
+ * PATCH /api/auth/avisos   Body: { avisosCorreo: boolean }
+ * Activa o desactiva el aviso por correo cuando se publica una alerta crítica o alta en la región.
+ */
+export async function cambiarAvisos(req, res) {
+  if (typeof req.body?.avisosCorreo !== 'boolean') throw new ErrorHttp(400, 'Indica si quieres recibir avisos por correo.')
+  await cambiarAvisosCorreo(req.usuario.id, req.body.avisosCorreo)
+  res.json({
+    mensaje: req.body.avisosCorreo ? 'Te avisaremos por correo de las alertas críticas y altas de tu región.' : 'Ya no recibirás avisos de alertas por correo.',
+    usuario: datosPublicos(await buscarPorId(req.usuario.id)),
   })
 }

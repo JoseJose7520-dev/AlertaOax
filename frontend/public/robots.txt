@@ -7,4 +7,4 @@ Disallow: /admin
 Disallow: /autoridad
 Disallow: /restablecer
 
-Sitemap: https://alertaoax.com/sitemap.xml
+Sitemap: https://alertaoax.duckdns.org/sitemap.xml

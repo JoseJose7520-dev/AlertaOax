@@ -92,3 +92,16 @@ export async function autorDeAlerta(id) {
   const { rows } = await consulta('SELECT autoridad_id FROM alertas WHERE id = $1', [id])
   return rows[0]?.autoridad_id ?? null
 }
+
+/**
+ * Correos que reciben el aviso de una alerta: cuentas activas, con correo confirmado y avisos activados
+ * de la región. No incluye a quien la publicó.
+ */
+export async function correosParaAviso(regionId, autorId) {
+  const { rows } = await consulta(
+    `SELECT correo FROM usuarios
+     WHERE region_id = $1 AND activo = TRUE AND correo_verificado = TRUE AND avisos_correo = TRUE AND id <> $2`,
+    [regionId, autorId],
+  )
+  return rows.map((r) => r.correo)
+}

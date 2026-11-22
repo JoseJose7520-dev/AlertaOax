@@ -133,7 +133,7 @@ export default function PublicarAlerta() {
 
         <div className="flex flex-wrap items-center gap-3">
           <button type="submit" className="btn-principal">Revisar y publicar</button>
-          <span className="text-nota text-tenue">Se notificará a todas las personas registradas en <strong>{form.region}</strong>.</span>
+          <span className="text-nota text-tenue">Se notificará a todas las personas registradas en <strong>{form.region}</strong>{(form.nivel === 'critico' || form.nivel === 'alto') && <>, y por ser riesgo {form.nivel === 'critico' ? 'crítico' : 'alto'} también les llegará un aviso por correo</>}.</span>
         </div>
       </form>
 

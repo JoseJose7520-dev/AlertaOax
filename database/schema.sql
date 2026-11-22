@@ -186,3 +186,9 @@ ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS telefono VARCHAR(10);
 -- Al cambiar o restablecer la contraseña se cierran todas las sesiones abiertas:
 -- los tokens emitidos antes de esta fecha dejan de servir.
 ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS sesiones_desde TIMESTAMPTZ;
+
+-- ============================================================
+-- AO-428: aviso por correo de alertas críticas y altas
+-- ============================================================
+-- Cada persona decide en «Mi perfil» si recibe por correo las alertas críticas y altas de su región.
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS avisos_correo BOOLEAN NOT NULL DEFAULT TRUE;

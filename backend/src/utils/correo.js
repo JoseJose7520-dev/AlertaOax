@@ -76,3 +76,47 @@ export async function enviarCodigoVerificacion({ para, nombre, codigo, minutos }
   })
   return true
 }
+
+const NIVEL_TEXTO = { critico: 'ALERTA ROJA · Riesgo crítico', alto: 'Riesgo alto' }
+const NIVEL_COLOR = { critico: '#DC2626', alto: '#EA580C' }
+const POR_LOTE = 50 // Gmail permite hasta 100 destinatarios por mensaje; en copia oculta nadie ve los demás correos
+
+/**
+ * Aviso de una alerta crítica o alta a las personas de la región (en copia oculta, por lotes).
+ * Sin SMTP configurado, solo lo anota en la consola. Devuelve cuántos correos se enviaron.
+ */
+export async function enviarAvisoAlerta({ destinatarios, alerta, enlace }) {
+  if (!destinatarios.length) return 0
+  const t = obtenerTransporte()
+  if (!t) {
+    console.log(`[correo] SMTP sin configurar. Aviso de alerta ${alerta.id} para ${destinatarios.length} persona(s).`)
+    return 0
+  }
+  const color = NIVEL_COLOR[alerta.nivel] ?? '#2563EB'
+  const etiqueta = NIVEL_TEXTO[alerta.nivel] ?? 'Alerta'
+  const html = `<!doctype html><html lang="es"><body style="margin:0;background:#EEF2F6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0F172A">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
+  <table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden" cellpadding="0" cellspacing="0">
+    <tr><td style="background:${color};padding:16px 28px;color:#ffffff;font-size:14px;font-weight:bold;letter-spacing:.5px">${escapar(etiqueta)} · Región ${escapar(alerta.region)}</td></tr>
+    <tr><td style="padding:28px">
+      <p style="font-size:22px;font-weight:bold;margin:0 0 12px">${escapar(alerta.titulo)}</p>
+      <p style="font-size:15px;line-height:1.5;margin:0 0 20px;white-space:pre-line">${escapar(alerta.descripcion)}</p>
+      <p style="margin:0 0 24px"><a href="${escapar(enlace)}" style="display:inline-block;background:#2563EB;color:#ffffff;text-decoration:none;font-weight:bold;padding:14px 22px;border-radius:12px">Qué hacer ahora</a></p>
+      <p style="font-size:13px;line-height:1.5;color:#475569;margin:0">Emite: ${escapar(alerta.institucion)}. Si tu vida corre peligro, llama al 911.<br>Puedes desactivar estos avisos en «Mi perfil».</p>
+    </td></tr>
+  </table></td></tr></table></body></html>`
+  let enviados = 0
+  for (let i = 0; i < destinatarios.length; i += POR_LOTE) {
+    const lote = destinatarios.slice(i, i + POR_LOTE)
+    await t.sendMail({
+      from: env.correo.remitente,
+      to: env.correo.remitente,
+      bcc: lote,
+      subject: `${alerta.nivel === 'critico' ? '🔴' : '🟠'} AlertaOax: ${alerta.titulo}`,
+      text: `${etiqueta} · Región ${alerta.region}\n\n${alerta.titulo}\n\n${alerta.descripcion}\n\nQué hacer ahora: ${enlace}\n\nSi tu vida corre peligro, llama al 911.`,
+      html,
+    })
+    enviados += lote.length
+  }
+  return enviados
+}
