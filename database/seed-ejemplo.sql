@@ -22,3 +22,7 @@ INSERT INTO zonas_riesgo (region_id, nombre, tipo, nivel, latitud, longitud, rad
   ((SELECT id FROM regiones WHERE nombre = 'Istmo'), 'Laguna Superior', 'huracan', 'medio', 16.3700, -94.9700, 3000),
   ((SELECT id FROM regiones WHERE nombre = 'Sierra Sur'), 'Ladera de la carretera 175', 'deslizamiento', 'medio', 16.3400, -96.5900, 800)
 ON CONFLICT (region_id, nombre) DO NOTHING;
+
+-- Todo lo que carga este archivo es de demostración
+UPDATE albergues SET es_ejemplo = TRUE WHERE fuente IS NULL;
+UPDATE zonas_riesgo SET es_ejemplo = TRUE;

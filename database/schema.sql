@@ -192,3 +192,15 @@ ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS sesiones_desde TIMESTAMPTZ;
 -- ============================================================
 -- Cada persona decide en «Mi perfil» si recibe por correo las alertas críticas y altas de su región.
 ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS avisos_correo BOOLEAN NOT NULL DEFAULT TRUE;
+
+-- ============================================================
+-- AO-429: albergues con datos oficiales
+-- ============================================================
+-- Protección Civil publica nombre y localidad de los refugios, pero no siempre su cupo:
+-- la capacidad puede quedar vacía («cupo no reportado»).
+ALTER TABLE albergues ALTER COLUMN capacidad DROP NOT NULL;
+-- De dónde sale el dato (p. ej. «CEPCyGR Oaxaca, junio 2026»)
+ALTER TABLE albergues ADD COLUMN IF NOT EXISTS fuente VARCHAR(200);
+-- TRUE en los datos de demostración (database/seed-ejemplo.sql); la app los marca como «Dato de ejemplo»
+ALTER TABLE albergues ADD COLUMN IF NOT EXISTS es_ejemplo BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE zonas_riesgo ADD COLUMN IF NOT EXISTS es_ejemplo BOOLEAN NOT NULL DEFAULT FALSE;
