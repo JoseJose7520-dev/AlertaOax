@@ -22,6 +22,7 @@ const iconoAlbergue = (activo) =>
 
 /** Estado del albergue según lugares libres: siempre con texto, no solo color. */
 function estadoAlbergue(a) {
+  if (a.capacidad == null) return { texto: 'ALBERGUE ABIERTO', clases: 'bg-riesgo-bajo text-abisal', barra: 'bg-riesgo-bajo', borde: 'border-l-riesgo-bajo' }
   if (a.libres <= 0) return { texto: 'ALBERGUE LLENO', clases: 'bg-riesgo-critico text-white', barra: 'bg-riesgo-critico', borde: 'border-l-riesgo-critico' }
   if (a.libres / a.capacidad < 0.2) return { texto: 'CASI LLENO', clases: 'bg-riesgo-alto text-abisal', barra: 'bg-riesgo-alto', borde: 'border-l-riesgo-alto' }
   return { texto: 'ALBERGUE ABIERTO', clases: 'bg-riesgo-bajo text-abisal', barra: 'bg-riesgo-bajo', borde: 'border-l-riesgo-bajo' }
@@ -30,7 +31,8 @@ function estadoAlbergue(a) {
 /** Tarjeta de albergue: estado, ocupación, distancia y «Cómo llegar». */
 function TarjetaAlbergue({ a, activo, masCercano, mostrarRegion, onElegir }) {
   const e = estadoAlbergue(a)
-  const ocupado = Math.round((1 - Math.max(a.libres, 0) / a.capacidad) * 100)
+  const sinCupo = a.capacidad == null // Protección Civil no publicó el cupo
+  const ocupado = sinCupo ? 0 : Math.round((1 - Math.max(a.libres, 0) / a.capacidad) * 100)
   return (
     <article
       className={`tarjeta flex flex-col gap-3 border-l-4 p-4 transition ${e.borde} ${activo ? 'ring-2 ring-acento' : ''}`}
@@ -41,16 +43,22 @@ function TarjetaAlbergue({ a, activo, masCercano, mostrarRegion, onElegir }) {
         <span className="flex min-w-0 flex-1 flex-col gap-1">
           <span className="flex flex-wrap items-center gap-1.5">
             <span className={`rounded-md px-2 py-0.5 text-mini font-bold ${e.clases}`}>{e.texto}</span>
+            {a.es_ejemplo && <span className="rounded-md bg-riesgo-medio-fondo px-2 py-0.5 text-mini font-bold text-riesgo-medio-texto">Dato de ejemplo</span>}
             {masCercano && <span className="rotulo text-ok-texto">El más cercano</span>}
           </span>
           <span className="text-subtitulo font-bold leading-snug">{a.nombre}</span>
           <span className="text-nota text-tenue">{a.direccion}{mostrarRegion ? ` · ${a.region}` : ''}</span>
         </span>
-        <span className="flex shrink-0 flex-col items-end">
-          <span className={`text-pantalla font-bold ${a.libres > 0 ? 'text-ok-texto' : 'text-riesgo-critico-texto'}`}>{Math.max(a.libres, 0)}</span>
-          <span className="rotulo text-tenue">libres</span>
-        </span>
+        {!sinCupo && (
+          <span className="flex shrink-0 flex-col items-end">
+            <span className={`text-pantalla font-bold ${a.libres > 0 ? 'text-ok-texto' : 'text-riesgo-critico-texto'}`}>{Math.max(a.libres, 0)}</span>
+            <span className="rotulo text-tenue">libres</span>
+          </span>
+        )}
       </button>
+      {sinCupo ? (
+        <p className="text-nota text-tenue">Cupo no reportado por Protección Civil{a.km !== undefined && ` · a ${textoDistancia(a.km)}`}</p>
+      ) : (
       <div className="flex flex-col gap-1.5">
         <div className="flex justify-between gap-2 text-nota">
           <span className="text-tenue">Ocupación {ocupado}%{a.km !== undefined && ` · a ${textoDistancia(a.km)}`}</span>
@@ -60,15 +68,17 @@ function TarjetaAlbergue({ a, activo, masCercano, mostrarRegion, onElegir }) {
           <div className={`h-full rounded-full ${e.barra}`} style={{ width: `${ocupado}%` }} />
         </div>
       </div>
+      )}
       <div className="flex flex-wrap gap-2">
-        <a href={enlaceRuta(a)} target="_blank" rel="noreferrer" className={`${a.libres > 0 ? 'btn-principal' : 'btn-neutro'} min-h-11 flex-1 text-texto`}>
+        <a href={enlaceRuta(a)} target="_blank" rel="noreferrer" className={`${sinCupo || a.libres > 0 ? 'btn-principal' : 'btn-neutro'} min-h-11 flex-1 text-texto`}>
           <Icono nombre="navegar" tam={20} peso="fill" /> Cómo llegar
         </a>
         {a.telefono && (
           <a href={`tel:${a.telefono}`} className="btn-neutro min-h-11 text-texto" aria-label={`Llamar a ${a.nombre}`}><Icono nombre="telefono" tam={20} /></a>
         )}
       </div>
-      {a.libres <= 0 && <p className="text-nota font-semibold text-riesgo-critico-texto">Sin lugares: busca otro albergue cercano.</p>}
+      {a.fuente && <p className="text-mini text-tenue">Fuente: {a.fuente}</p>}
+      {!sinCupo && a.libres <= 0 && <p className="text-nota font-semibold text-riesgo-critico-texto">Sin lugares: busca otro albergue cercano.</p>}
     </article>
   )
 }
