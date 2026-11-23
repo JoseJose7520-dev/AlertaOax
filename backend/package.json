@@ -14,7 +14,8 @@
     "db:init": "node scripts/init-db.js",
     "crear-admin": "node scripts/crear-admin.js",
     "db:ejemplo": "node scripts/cargar-ejemplo.js",
-    "db:albergues": "node scripts/cargar-albergues.js"
+    "db:albergues": "node scripts/cargar-albergues.js",
+    "test": "node --test"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

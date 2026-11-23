@@ -1,0 +1,83 @@
+# Integración continua de AlertaOax: se ejecuta en cada pull request y en cada cambio a main.
+# - backend: pruebas unitarias + la colección completa de Postman contra una base PostgreSQL real
+# - frontend: revisión de código (oxlint) y compilación de producción
+name: Pruebas
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend (unitarias + Postman)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      NODE_ENV: test
+      PORT: 3000
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: alertaoax
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      JWT_SECRET: clave-de-integracion-continua-solo-pruebas
+      FRONTEND_URL: http://localhost:5173
+      APP_URL: http://localhost:5173
+      CODIGO_PRUEBA: '1'
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Pruebas unitarias
+        run: npm test
+      - name: Crear la base de datos y el administrador de prueba
+        run: |
+          npm run db:init
+          npm run db:ejemplo
+          npm run crear-admin -- "Administrador AlertaOax" admin@alertaoax.mx Admin12345
+      - name: Levantar la API
+        run: |
+          node src/server.js > api.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:3000/api/health && exit 0; sleep 1; done
+          cat api.log; exit 1
+      - name: Colección de Postman (newman)
+        run: npx --yes newman@6 run ../docs/postman/AlertaOax.postman_collection.json -e ../docs/postman/AlertaOax_local.postman_environment.json --color on
+      - name: Bitácora de la API (si algo falló)
+        if: failure()
+        run: cat api.log
+
+  frontend:
+    name: Frontend (lint + build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
