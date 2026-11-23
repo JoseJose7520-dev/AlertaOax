@@ -1,65 +1,65 @@
 # AlertaOax
 
-Plataforma web de alertas y preparación ante desastres para comunidades de Oaxaca. La población consulta zonas de riesgo, albergues y rutas de evacuación; recibe las alertas oficiales de su región; consulta guías para antes, durante y después de sismos, inundaciones y huracanes; y reporta incidencias. Protección civil publica avisos verificados y un administrador valida a las autoridades y consulta estadísticas.
+[![Pruebas](https://github.com/JoseJose7520-dev/AlertaOax/actions/workflows/ci.yml/badge.svg)](https://github.com/JoseJose7520-dev/AlertaOax/actions/workflows/ci.yml)
 
-Alineado con los Objetivos de Desarrollo Sostenible **11** (Ciudades y comunidades sostenibles) y **13** (Acción por el clima).
+**AlertaOax es una página web que ayuda a las personas de Oaxaca a estar preparadas ante sismos, huracanes, inundaciones y deslaves.**
 
-## Equipo 10 — Gestión de Proyectos de Software (SCG-1009), ITO
+En Oaxaca tiembla seguido y cada año llegan huracanes a la costa. Cuando pasa algo, la información oficial suele estar repartida entre redes sociales, radio y grupos de WhatsApp, y no siempre llega a tiempo ni es confiable. AlertaOax junta en un solo lugar lo que una familia necesita saber antes, durante y después de una emergencia.
 
-| Integrante | Rol Scrum | Área principal |
-|---|---|---|
-| José José Osvaldo ([@JoseJose7520-dev](https://github.com/JoseJose7520-dev)) | Product Owner y Developer | Frontend completo (React, mapa, preparación, dashboard), tablero y documentación |
-| Ortiz Bautista Josue Ahuitz ([@Mammal117](https://github.com/Mammal117)) | Scrum Master y Developer | Backend completo (API Express, PostgreSQL, notificaciones), pruebas y despliegue |
+👉 **Pruébala aquí:** https://alertaoax.duckdns.org
+
+> AlertaOax es un apoyo, no un sustituto de los servicios de emergencia. **Si tu vida corre peligro, llama primero al 911.**
+
+## ¿Qué puedes hacer en AlertaOax?
+
+**Si eres ciudadano:**
+- Recibir las alertas oficiales de tu región, dentro de la página y, cuando el riesgo es alto o crítico, también en tu correo.
+- Ver en un mapa los refugios temporales oficiales de Protección Civil y cómo llegar a ellos.
+- Prepararte con guías sencillas, una lista para armar tu mochila de emergencia y un plan familiar.
+- Avisar a la autoridad si ves un árbol caído, una inundación o un deslave, y ver cuándo lo atienden.
+
+**Si eres autoridad de Protección Civil:**
+- Publicar alertas para una región y avisar a las personas que viven ahí.
+- Atender los reportes que envía la población.
+
+**Si eres el administrador:**
+- Aprobar a las autoridades antes de que puedan publicar alertas, para que solo se difunda información verificada.
+- Consultar cuántas alertas, reportes y personas registradas hay.
+
+Puedes crear tu cuenta con tu correo o entrar con tu cuenta de Google. La página funciona en celular y en computadora, y tiene modo oscuro.
+
+## ¿Por qué lo hicimos?
+
+AlertaOax es nuestro proyecto integrador de **Gestión de Proyectos de Software** en el Instituto Tecnológico de Oaxaca. Lo pensamos para contribuir a dos Objetivos de Desarrollo Sostenible de la ONU: **comunidades más seguras (ODS 11)** y **acción ante el cambio climático (ODS 13)**. Una comunidad que sabe qué hacer ante un desastre se recupera más rápido.
+
+## Equipo 9
+
+| Integrante | Qué hizo |
+|---|---|
+| José José Osvaldo ([@JoseJose7520-dev](https://github.com/JoseJose7520-dev)) | Product Owner. Diseño y pantallas de la página, mapa, módulo de preparación, documentación y publicación en internet. |
+| Ortiz Bautista Josue Ahuitz ([@Mammal117](https://github.com/Mammal117)) | Scrum Master. Servidor y base de datos, alertas, correos, acceso con Google y pruebas automáticas. |
 
 Docente: Martínez Nieto Adelina.
 
-## Tecnologías
-
-| Capa | Tecnología |
-|---|---|
-| Frontend | React + Vite, TailwindCSS, React-Leaflet |
-| Backend | Node.js + Express (API REST, JWT, bcrypt) |
-| Base de datos | PostgreSQL |
-| Gestión | GitHub Projects (Scrum), issues y pull requests |
-
-## Estructura del repositorio
-
-```
-AlertaOax/
-├── backend/      API REST en Express (rutas → controladores → modelos)
-├── frontend/     Aplicación React con Vite
-├── database/     Scripts SQL: esquema (DDL) y datos de prueba
-├── docs/         Documentación del proyecto y figuras
-└── .github/      Plantillas de issues y pull requests
-```
-
-## Plan de Sprints
-
-| Sprint | Fechas | Objetivo |
-|---|---|---|
-| Sprint 0 | 9 – 11 nov 2026 | Repositorio, entorno, tablero y wireframes |
-| Sprint 1 | 12 – 18 nov 2026 | Base de datos, servidor y autenticación con roles |
-| Sprint 2 | 19 – 24 nov 2026 | Publicación de alertas y notificaciones por región |
-| Sprint 3 | 25 – 30 nov 2026 | Mapa, módulo de preparación y reportes ciudadanos |
-| Sprint 4 | 1 – 3 dic 2026 | Panel de administración, pruebas y despliegue |
-| **Entrega final** | **4 dic 2026** | |
-
 ## Cómo trabajamos
 
-Cada cambio entra a `main` mediante un pull request revisado por el otro integrante. La guía paso a paso está en [CONTRIBUTING.md](CONTRIBUTING.md).
+Organizamos el proyecto con **Scrum**, en cinco etapas cortas (sprints): preparar el proyecto, construir la base, las alertas, el mapa y la preparación, y al final el panel de administración, el diseño final y la publicación. Repartimos las tareas en el tablero de GitHub, y cada cambio lo revisaba el otro integrante antes de agregarlo al proyecto. Además, cada vez que alguien propone un cambio, GitHub revisa automáticamente que todo siga funcionando (la insignia verde de arriba).
 
-**Definición de Terminado:** el código fue revisado mediante un pull request por el otro integrante, las pruebas se ejecutaron sin errores, se cumplieron los criterios de aceptación y el cambio quedó integrado en `main`.
+## Documentación
 
+- [Manual de usuario](docs/manual/Manual_de_Usuario_AlertaOax.pdf): cómo usar la página paso a paso, con capturas.
+- [Diseño en Figma](docs/diseno/figma/README.md): las pantallas del diseño final.
+- [Guía para colaborar](CONTRIBUTING.md): cómo trabajamos con Git y GitHub.
+- Para el equipo técnico: [cómo correrlo en tu computadora](backend/README.md), [pruebas con Postman](docs/postman/README.md) y [cómo publicar una nueva versión](deploy/README.md).
 
-## Cómo ejecutar el frontend en local
+## Lo que sigue
 
-Requisito: Node.js 18 o superior.
+Algunas ideas quedaron para una siguiente versión:
+- Consultar las guías y el plan familiar aunque no haya internet.
+- Mostrar los refugios oficiales de otras regiones cuando Protección Civil los publique (por ahora están los de la Costa).
+- Que cada persona pueda borrar su cuenta y sus datos cuando quiera.
+- Respaldos automáticos de la información y más funciones para el administrador, como descargar los reportes.
 
-```
-cd frontend
-npm install
-copy .env.example .env
-npm run dev
-```
+## ¿Con qué está hecho?
 
-La aplicación abre en http://localhost:5173. Con `VITE_MOCK_AUTH=true` en el `.env`, el acceso funciona sin backend. Más detalles en [frontend/README.md](frontend/README.md).
+Para quien tenga curiosidad: la página está hecha con React, el servidor con Node.js y la información se guarda en PostgreSQL. Está publicada en un servidor de Amazon Web Services con conexión segura (HTTPS), y los mapas son de OpenStreetMap.
