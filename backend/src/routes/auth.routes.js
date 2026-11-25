@@ -5,7 +5,7 @@ import { verificarToken } from '../middlewares/verificarToken.js'
 import { bloquearBots } from '../middlewares/antiSpam.js'
 import {
   accesoGoogle, cambiarAvisos, cambiarMiPassword, editarPerfil, iniciarSesion, olvidePassword, perfilActual, reenviarCodigo,
-  registrar, restablecerPassword, verificarCorreo,
+  registrar, restablecerPassword, solicitarAutoridad, verificarCorreo,
 } from '../controllers/auth.controller.js'
 
 const router = Router()
@@ -39,5 +39,6 @@ router.get('/me', verificarToken, asyncHandler(perfilActual))
 router.patch('/perfil', verificarToken, asyncHandler(editarPerfil))
 router.patch('/avisos', verificarToken, asyncHandler(cambiarAvisos))
 router.post('/password', limitarIntentos, verificarToken, asyncHandler(cambiarMiPassword))
+router.post('/solicitud-autoridad', limitarIntentos, verificarToken, asyncHandler(solicitarAutoridad))
 
 export default router

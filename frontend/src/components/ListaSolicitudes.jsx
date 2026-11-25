@@ -87,8 +87,9 @@ export default function ListaSolicitudes({ autoridades, onDecidido, onError }) {
           <>
             <p><strong className="text-tinta">{pendiente.a.nombre}</strong> · {pendiente.a.institucion} ({pendiente.a.region})</p>
             <p>{aprobar
-              ? 'Podrá publicar alertas que llegarán a toda la población de su región. Confirma antes su cargo por un medio oficial.'
-              : 'La persona no podrá publicar alertas. Podrás aprobarla después desde «Rechazadas» si fue un error.'}</p>
+              ? 'Su cuenta pasará a ser de autoridad y podrá publicar alertas que llegarán a toda la población de su región. Confirma antes su cargo por un medio oficial.'
+              : 'No podrá publicar alertas, pero su cuenta seguirá activa como ciudadano. Podrás aprobarla después desde «Rechazadas» si fue un error.'}</p>
+            <p className="text-nota">Le avisaremos de tu decisión por correo.</p>
           </>
         )}
       </Confirmar>

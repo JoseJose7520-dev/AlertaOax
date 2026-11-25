@@ -20,6 +20,22 @@ const MENU_ESCRITORIO = [
  * - Celular: encabezado, contenido en una columna y barra inferior de 4 pestañas.
  * - Escritorio: menú lateral fijo con la tarjeta de emergencia 911.
  */
+/** Estado de la solicitud de autoridad de un ciudadano (pendiente o rechazada). */
+function AvisoSolicitud({ solicitud }) {
+  if (!solicitud) return null
+  const pendiente = solicitud.estado === 'pendiente'
+  return (
+    <div className={`mb-4 flex items-start gap-3 rounded-2xl border p-4 text-nota ${pendiente ? 'border-acento/30 bg-acento-claro' : 'border-riesgo-medio/40 bg-riesgo-medio-fondo'}`} role="status">
+      <Icono nombre={pendiente ? 'reloj' : 'info'} tam={22} className={pendiente ? 'text-acento dark:text-acento-fuerte' : 'text-riesgo-medio-texto'} />
+      <p className="text-tinta-suave">
+        {pendiente
+          ? <><strong className="text-tinta">Tu solicitud de autoridad está en revisión.</strong> Mientras el administrador valida tu cargo puedes usar AlertaOax como ciudadano. Te avisaremos por correo.</>
+          : <><strong className="text-tinta">Tu solicitud de autoridad no fue aprobada.</strong> Tu cuenta sigue activa como ciudadano. Si trabajas en Protección Civil, puedes enviar otra solicitud desde <Link to="/perfil" className="font-bold">Mi perfil</Link>.</>}
+      </p>
+    </div>
+  )
+}
+
 export default function LayoutCiudadano() {
   const { usuario, cerrarSesion } = useAuth()
   // Región que se consulta en Alertas y Mapa (por defecto, la de la cuenta). Se recuerda en la pestaña.
@@ -81,6 +97,7 @@ export default function LayoutCiudadano() {
           </div>
         </header>
         <main className="flex-1 px-4 pt-4 pb-6 sm:px-5 lg:px-8">
+          <AvisoSolicitud solicitud={usuario?.solicitudAutoridad} />
           <Outlet context={{ region, propia: usuario?.region, cambiarRegion }} />
         </main>
         <PieLegal className="px-4 pb-28 lg:pb-8" />

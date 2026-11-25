@@ -3,6 +3,8 @@ import ErrorHttp from '../utils/ErrorHttp.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { verificarToken } from '../middlewares/verificarToken.js'
 import { verificarRol } from '../middlewares/verificarRol.js'
+import { env } from '../config/env.js'
+import { enviarResultadoAutoridad } from '../utils/correo.js'
 import { listarAutoridades, listarUsuarios, obtenerMetricas, validarAutoridad } from '../models/admin.model.js'
 
 const router = Router()
@@ -38,8 +40,18 @@ router.put('/authorities/:id/validate', asyncHandler(async (req, res) => {
   const decision = req.body?.decision
   if (!Number.isInteger(id) || id <= 0) throw new ErrorHttp(400, 'Identificador inválido.')
   if (decision !== 'aprobada' && decision !== 'rechazada') throw new ErrorHttp(400, 'La decisión debe ser aprobada o rechazada.')
-  if (!(await validarAutoridad(id, decision, req.usuario.id))) throw new ErrorHttp(404, 'La solicitud de autoridad no existe.')
-  res.json({ mensaje: decision === 'aprobada' ? 'Autoridad aprobada.' : 'Solicitud rechazada.' })
+  const persona = await validarAutoridad(id, decision, req.usuario.id)
+  if (!persona) throw new ErrorHttp(404, 'La solicitud de autoridad no existe.')
+  // Se le avisa por correo en segundo plano: así sabe la respuesta sin tener que intentar entrar
+  if (persona.correo) {
+    enviarResultadoAutoridad({ para: persona.correo, nombre: persona.nombre, region: persona.region, aprobada: decision === 'aprobada', enlace: env.appUrl })
+      .catch((err) => console.error('[correo] No se pudo avisar el resultado de la solicitud:', err.message))
+  }
+  res.json({
+    mensaje: decision === 'aprobada'
+      ? 'Autoridad aprobada. Le avisamos por correo y ya puede publicar alertas.'
+      : 'Solicitud rechazada. Le avisamos por correo; su cuenta sigue activa como ciudadano.',
+  })
 }))
 
 export default router

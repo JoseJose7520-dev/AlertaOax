@@ -78,6 +78,36 @@ export async function listarPorAutor(autoridadId) {
   return rows
 }
 
+/**
+ * Alertas para el panel: con regionId, las de esa región (de cualquier autor); sin él, las de todo Oaxaca.
+ * Incluye quién la publicó y su institución, para que el administrador revise lo que suben las autoridades.
+ */
+export async function listarParaPanel(regionId = null) {
+  const params = []
+  let filtro = ''
+  if (regionId) {
+    params.push(regionId)
+    filtro = 'WHERE a.region_id = $1'
+  }
+  const { rows } = await consulta(
+    `SELECT a.id, a.tipo, a.nivel, a.titulo, a.emitida_en, a.vigente_hasta, a.autoridad_id,
+            r.nombre AS region,
+            u.nombre AS autor, u.rol AS rol_autor,
+            COALESCE(au.institucion, 'Administración AlertaOax') AS institucion,
+            (a.vigente_hasta > NOW()) AS vigente,
+            (SELECT COUNT(*)::int FROM notificaciones n WHERE n.alerta_id = a.id) AS notificados
+     FROM alertas a
+     JOIN regiones r          ON r.id = a.region_id
+     JOIN usuarios u          ON u.id = a.autoridad_id
+     LEFT JOIN autoridades au ON au.usuario_id = u.id
+     ${filtro}
+     ORDER BY (a.vigente_hasta > NOW()) DESC, a.emitida_en DESC
+     LIMIT 100`,
+    params,
+  )
+  return rows
+}
+
 /** Termina una alerta antes de tiempo (la vigencia pasa a "ahora"). Solo su autor o un administrador. */
 export async function finalizarAlerta(id) {
   const { rowCount } = await consulta(

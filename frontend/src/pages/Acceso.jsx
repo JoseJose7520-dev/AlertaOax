@@ -15,6 +15,7 @@ import ModalTerminos from '../components/ModalTerminos.jsx'
 import PanelIdentidad from '../components/PanelIdentidad.jsx'
 import PieLegal from '../components/PieLegal.jsx'
 import { PASSWORD_MAX, PASSWORD_MIN, errorPassword } from '../utils/password.js'
+import { errorInstitucion, errorNombre } from '../utils/validaciones.js'
 
 const VACIO = { nombre: '', correo: '', password: '', confirmar: '', region: '', institucion: '' }
 const REGEX_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -118,32 +119,31 @@ export default function Acceso() {
   // Validación en el navegador (el servidor vuelve a validar todo)
   const errores = {}
   if (esRegistro) {
-    if (form.nombre.trim().length < 2) errores.nombre = 'Escribe tu nombre completo.'
+    if (errorNombre(form.nombre)) errores.nombre = errorNombre(form.nombre)
     if (!REGEX_CORREO.test(form.correo.trim())) errores.correo = 'Escribe un correo válido, por ejemplo nombre@gmail.com.'
     else if (DOMINIO_DE_EJEMPLO.test(form.correo.trim())) errores.correo = 'Ese correo es de ejemplo. Escribe tu correo real: te enviaremos un código.'
     if (errorPassword(form.password)) errores.password = errorPassword(form.password)
     if (form.confirmar !== form.password) errores.confirmar = 'Las contraseñas no coinciden.'
     if (!form.region) errores.region = 'Elige tu región.'
-    if (perfil === 'autoridad' && form.institucion.trim().length < 3) errores.institucion = 'Indica tu institución y cargo.'
+    if (perfil === 'autoridad' && errorInstitucion(form.institucion)) errores.institucion = errorInstitucion(form.institucion)
   } else {
     if (!REGEX_CORREO.test(form.correo.trim())) errores.correo = 'Escribe un correo válido.'
     if (!form.password) errores.password = 'Escribe tu contraseña.'
   }
+  if (pendienteGoogle && perfil === 'autoridad' && errorInstitucion(form.institucion)) errores.institucion = errorInstitucion(form.institucion)
   const ver = (campo) => (intento ? errores[campo] : undefined)
 
+  // Al cambiar entre «Iniciar sesión» y «Crear cuenta» se borra la contraseña escrita: la que se puso para
+  // entrar no debe aparecer ya escrita en el registro (revisión del Equipo 1, punto 1)
   function cambiarModo(m) {
     setModo(m); setError(''); setExito(''); setIntento(false); setPendienteGoogle(null); setVerificando(null)
+    setForm((f) => ({ ...f, password: '', confirmar: '' }))
   }
 
-  // Al confirmar el código: el ciudadano entra directo; la autoridad espera la validación del administrador
+  // Al confirmar el código se entra directo. Quien pidió ser autoridad usa la app como ciudadano
+  // mientras el administrador valida su cargo (en Inicio ve en qué va su solicitud).
   async function confirmarCodigo(codigo) {
     const r = await verificarCorreo(verificando.correo, codigo)
-    if (r.pendiente) {
-      setExito(r.mensaje)
-      setVerificando(null); setModo('entrar'); setIntento(false); setAcepta(false)
-      setForm({ ...VACIO, correo: verificando.correo })
-      return
-    }
     navegar(desde ?? inicioPorRol(r.usuario.rol), { replace: true })
   }
 
@@ -197,13 +197,16 @@ export default function Acceso() {
   function terminarGoogle(e) {
     e.preventDefault()
     setIntento(true)
-    if (!form.region || !acepta) return
-    conGoogle(pendienteGoogle.credential, { region: form.region, aceptaTerminos: true })
+    if (!form.region || !acepta || (perfil === 'autoridad' && errorInstitucion(form.institucion))) return
+    conGoogle(pendienteGoogle.credential, {
+      region: form.region, aceptaTerminos: true, perfil,
+      ...(perfil === 'autoridad' ? { institucion: form.institucion } : {}),
+    })
   }
 
   const selectorRegion = (
     <label className="etiqueta">
-      {perfil === 'autoridad' && esRegistro ? '¿En qué región trabajas?' : '¿En qué región vives?'}
+      {perfil === 'autoridad' && (esRegistro || pendienteGoogle) ? '¿En qué región trabajas?' : '¿En qué región vives?'}
       <span className="relative">
         <Icono nombre="ubicacion" tam={20} className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-tenue" />
         <select className={`campo pl-11 font-normal ${ver('region') ? 'border-riesgo-critico' : ''}`} value={form.region} onChange={cambiar('region')} required>
@@ -212,9 +215,17 @@ export default function Acceso() {
         </select>
       </span>
       <span className={`text-nota font-normal ${ver('region') ? 'font-semibold text-riesgo-critico-texto' : 'text-tenue'}`}>
-        {ver('region') || (perfil === 'autoridad' && esRegistro ? 'Verás los reportes ciudadanos de esta región.' : 'Solo te llegarán las alertas de esta región.')}
+        {ver('region') || (perfil === 'autoridad' && (esRegistro || pendienteGoogle) ? 'Verás los reportes ciudadanos de esta región.' : 'Solo te llegarán las alertas de esta región.')}
       </span>
     </label>
+  )
+
+  const camposAutoridad = (
+    <>
+      <Campo etiqueta="Institución y cargo" icono="escudo" placeholder="Ej. Protección Civil de San Pedro Pochutla, coordinadora"
+        value={form.institucion} onChange={cambiar('institucion')} error={ver('institucion')} maxLength={160} />
+      <Aviso tipo="info">Tu solicitud quedará <strong>pendiente de validación</strong>. Mientras el administrador confirma tu cargo puedes usar AlertaOax como ciudadano, y te avisaremos por correo cuando la revise.</Aviso>
+    </>
   )
 
   return (
@@ -244,13 +255,15 @@ export default function Acceso() {
               <div>
                 <p className="rotulo text-acento dark:text-acento-fuerte">Último paso</p>
                 <h2 className="mt-1 text-pantalla font-bold">Completa tu registro</h2>
-                <p className="mt-1.5 text-tenue">Entraste como <strong className="text-tinta">{pendienteGoogle.correo}</strong>. Elige tu región para recibir las alertas que te corresponden.</p>
+                <p className="mt-1.5 text-tenue">Entraste como <strong className="text-tinta">{pendienteGoogle.correo}</strong>. Elige tu perfil y tu región. Google ya confirmó tu correo, así que no necesitas código.</p>
               </div>
+              <SelectorPerfil valor={perfil} onCambio={setPerfil} />
               {selectorRegion}
+              {perfil === 'autoridad' && camposAutoridad}
               <CasillaTerminos marcado={acepta} onCambio={setAcepta} onLeer={() => setVerTerminos(true)} />
               {intento && !acepta && <p className="-mt-3 text-nota font-semibold text-riesgo-critico-texto">Debes aceptar los términos para continuar.</p>}
               <Aviso tipo="error">{error}</Aviso>
-              <button type="submit" className="btn-principal" disabled={enviando || !acepta}>{enviando ? 'Un momento…' : 'Crear mi cuenta'}</button>
+              <button type="submit" className="btn-principal" disabled={enviando || !acepta}>{enviando ? 'Un momento…' : perfil === 'autoridad' ? 'Enviar solicitud' : 'Crear mi cuenta'}</button>
               <button type="button" onClick={() => setPendienteGoogle(null)} className="btn-neutro">Cancelar</button>
             </form>
           ) : (
@@ -271,7 +284,7 @@ export default function Acceso() {
                 <Campo etiqueta="Correo electrónico" icono="correo" tipo="email" autoComplete="email" inputMode="email"
                   placeholder="nombre@gmail.com" value={form.correo} onChange={cambiar('correo')} error={ver('correo')} />
                 <Campo etiqueta="Contraseña" icono="candado" tipo="password" autoComplete={esRegistro ? 'new-password' : 'current-password'}
-                  placeholder={esRegistro ? `De ${PASSWORD_MIN} a ${PASSWORD_MAX} caracteres` : ''} value={form.password} onChange={cambiar('password')} error={ver('password')}
+                  placeholder={esRegistro ? `${PASSWORD_MIN} a ${PASSWORD_MAX} caracteres, con letras y números` : ''} value={form.password} onChange={cambiar('password')} error={ver('password')}
                   maxLength={esRegistro ? PASSWORD_MAX : undefined} contador={esRegistro}
                   extra={!esRegistro && <Link to="/olvide" state={{ correo: form.correo }} className="text-nota font-bold">¿Olvidaste tu contraseña?</Link>} />
                 {esRegistro && (
@@ -280,13 +293,7 @@ export default function Acceso() {
                     ayuda={form.confirmar && form.confirmar === form.password ? '✓ Las contraseñas coinciden' : undefined} />
                 )}
                 {esRegistro && selectorRegion}
-                {esRegistro && perfil === 'autoridad' && (
-                  <>
-                    <Campo etiqueta="Institución y cargo" icono="escudo" placeholder="Ej. Protección Civil de San Pedro Pochutla, coordinadora"
-                      value={form.institucion} onChange={cambiar('institucion')} error={ver('institucion')} />
-                    <Aviso tipo="info">Tu cuenta quedará <strong>pendiente de validación</strong>. El administrador confirmará tu cargo antes de que puedas publicar alertas.</Aviso>
-                  </>
-                )}
+                {esRegistro && perfil === 'autoridad' && camposAutoridad}
                 {esRegistro && <CasillaTerminos marcado={acepta} onCambio={setAcepta} onLeer={() => setVerTerminos(true)} />}
 
                 <Aviso tipo="error">{error}</Aviso>
@@ -297,7 +304,7 @@ export default function Acceso() {
                 </button>
               </form>
 
-              {googleId && !(esRegistro && perfil === 'autoridad') && (
+              {googleId && (
                 <>
                   <div className="flex items-center gap-3 text-nota text-tenue" aria-hidden="true">
                     <span className="h-px flex-1 bg-linea" /> o accede con <span className="h-px flex-1 bg-linea" />

@@ -120,3 +120,38 @@ export async function enviarAvisoAlerta({ destinatarios, alerta, enlace }) {
   }
   return enviados
 }
+
+/**
+ * Le avisa a quien pidió ser autoridad si el administrador aprobó o rechazó su solicitud.
+ * Sin SMTP configurado, solo lo anota en la consola.
+ */
+export async function enviarResultadoAutoridad({ para, nombre, region, aprobada, enlace }) {
+  const t = obtenerTransporte()
+  if (!t) {
+    console.log(`[correo] SMTP sin configurar. Solicitud de autoridad de ${para}: ${aprobada ? 'aprobada' : 'rechazada'}.`)
+    return false
+  }
+  const titulo = aprobada ? 'Tu cuenta de autoridad fue aprobada' : 'Tu solicitud de autoridad no fue aprobada'
+  const cuerpo = aprobada
+    ? `El administrador validó tu cargo. Ya puedes entrar a AlertaOax y publicar alertas para la región ${region ?? ''}. Si tenías la app abierta, cierra sesión y vuelve a entrar.`
+    : 'El administrador no pudo validar tu cargo con los datos que enviaste. Tu cuenta sigue activa como ciudadano. Si trabajas en Protección Civil, desde «Mi perfil» puedes enviar otra solicitud con tu institución y cargo completos.'
+  const html = `<!doctype html><html lang="es"><body style="margin:0;background:#EEF2F6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0F172A">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
+  <table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden" cellpadding="0" cellspacing="0">
+    <tr><td style="background:#0B1120;padding:20px 28px;color:#ffffff;font-size:20px;font-weight:bold">AlertaOax</td></tr>
+    <tr><td style="padding:28px">
+      <p style="font-size:18px;font-weight:bold;margin:0 0 12px">Hola, ${escapar(nombre)}</p>
+      <p style="font-size:16px;font-weight:bold;margin:0 0 8px;color:${aprobada ? '#059669' : '#DC2626'}">${escapar(titulo)}</p>
+      <p style="font-size:15px;line-height:1.5;margin:0 0 20px">${escapar(cuerpo)}</p>
+      <p style="margin:0"><a href="${escapar(enlace)}" style="display:inline-block;background:#2563EB;color:#ffffff;text-decoration:none;font-weight:bold;padding:14px 22px;border-radius:12px">Entrar a AlertaOax</a></p>
+    </td></tr>
+  </table></td></tr></table></body></html>`
+  await t.sendMail({
+    from: env.correo.remitente,
+    to: para,
+    subject: `AlertaOax: ${titulo.toLowerCase()}`,
+    text: `Hola, ${nombre}.\n\n${titulo}.\n${cuerpo}\n\n${enlace}`,
+    html,
+  })
+  return true
+}

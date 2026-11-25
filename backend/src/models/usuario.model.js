@@ -61,18 +61,21 @@ export async function borrarSinVerificar(id) {
   await consulta('DELETE FROM usuarios WHERE id = $1 AND correo_verificado = FALSE', [id])
 }
 
-/** Crea el usuario y, si es autoridad, su registro pendiente de validación (en una sola transacción). */
-export async function crearUsuario({ nombre, correo, passwordHash, rol, regionId, institucion, googleSub = null, correoVerificado = true, passwordDefinida = true }) {
+/**
+ * Crea la cuenta como ciudadano. Si trae `institucion`, además deja su solicitud de autoridad pendiente
+ * (en la misma transacción): cuando el administrador la aprueba, la cuenta pasa a ser de autoridad.
+ */
+export async function crearUsuario({ nombre, correo, passwordHash, regionId, institucion = null, googleSub = null, correoVerificado = true, passwordDefinida = true }) {
   const cliente = await pool.connect()
   try {
     await cliente.query('BEGIN')
     const { rows } = await cliente.query(
       `INSERT INTO usuarios (nombre, correo, password_hash, rol, region_id, google_sub, correo_verificado, password_definida, terminos_aceptados_en)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW()) RETURNING id`,
-      [nombre, correo, passwordHash, rol, regionId, googleSub, correoVerificado, passwordDefinida],
+       VALUES ($1, $2, $3, 'ciudadano', $4, $5, $6, $7, NOW()) RETURNING id`,
+      [nombre, correo, passwordHash, regionId, googleSub, correoVerificado, passwordDefinida],
     )
     const id = rows[0].id
-    if (rol === 'autoridad') {
+    if (institucion) {
       await cliente.query('INSERT INTO autoridades (usuario_id, institucion) VALUES ($1, $2)', [id, institucion])
     }
     await cliente.query('COMMIT')
@@ -83,6 +86,16 @@ export async function crearUsuario({ nombre, correo, passwordHash, rol, regionId
   } finally {
     cliente.release()
   }
+}
+
+/** Solicitud de autoridad de un ciudadano (nueva, o de nuevo pendiente si antes se la rechazaron). */
+export async function guardarSolicitudAutoridad(usuarioId, institucion) {
+  await consulta(
+    `INSERT INTO autoridades (usuario_id, institucion) VALUES ($1, $2)
+     ON CONFLICT (usuario_id) DO UPDATE
+     SET institucion = EXCLUDED.institucion, estado_validacion = 'pendiente', validada_por = NULL, validada_en = NULL`,
+    [usuarioId, institucion],
+  )
 }
 
 /** Activa o desactiva los avisos por correo de alertas críticas y altas. */

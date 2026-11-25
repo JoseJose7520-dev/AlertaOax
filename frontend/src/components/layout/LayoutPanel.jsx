@@ -14,9 +14,11 @@ export default function LayoutPanel({ titulo, enlaces }) {
   // «Mi perfil» vive dentro del panel en el que se está (/autoridad/perfil o /admin/perfil)
   const base = useLocation().pathname.startsWith('/admin') ? '/admin' : '/autoridad'
   // El administrador también puede publicar alertas: desde ese panel, le damos un regreso a su resumen
-  const menu = usuario?.rol === 'administrador' && !enlaces.some((e) => e.a === '/admin')
-    ? [...enlaces, { a: '/admin', texto: 'Administración', corto: 'Admin', icono: 'grafica', exacta: true }]
-    : enlaces
+  const esAdmin = usuario?.rol === 'administrador'
+  const propios = esAdmin ? enlaces.map((e) => (e.a === '/autoridad/alertas' ? { ...e, texto: 'Alertas publicadas' } : e)) : enlaces
+  const menu = esAdmin && !enlaces.some((e) => e.a === '/admin')
+    ? [...propios, { a: '/admin', texto: 'Administración', corto: 'Admin', icono: 'grafica', exacta: true }]
+    : propios
   return (
     <div className="flex min-h-[calc(100dvh-2rem)] flex-col">
       <header className="sticky top-8 z-20 flex items-center justify-between gap-2 sm:gap-3 border-b border-linea bg-superficie/90 px-4 py-3 backdrop-blur-md sm:px-6">

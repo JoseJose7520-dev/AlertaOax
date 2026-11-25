@@ -8,6 +8,9 @@ import Aviso from '../../components/Aviso.jsx'
 import Confirmar from '../../components/Confirmar.jsx'
 import Icono from '../../components/Icono.jsx'
 
+/** La alerta debe durar al menos esto (el servidor aplica la misma regla). */
+const MIN_MINUTOS = 30
+
 /** Valor para <input type="datetime-local"> en hora local, N horas desde ahora. */
 function enHoras(horas) {
   const d = new Date(Date.now() + horas * 3600e3)
@@ -34,6 +37,10 @@ export default function PublicarAlerta() {
     if (form.titulo.trim().length < 5) return setError('Escribe un título de al menos 5 caracteres.')
     if (form.descripcion.trim().length < 10) return setError('Escribe las indicaciones para la población (al menos 10 caracteres).')
     if (!form.vigenteHasta || new Date(form.vigenteHasta) <= new Date()) return setError('La vigencia debe ser una fecha futura.')
+    // Una alerta que vence a los pocos minutos desaparece antes de que la población la vea (revisión Equipo 1, punto 9)
+    if (new Date(form.vigenteHasta).getTime() < Date.now() + MIN_MINUTOS * 60e3) {
+      return setError(`La alerta debe estar vigente al menos ${MIN_MINUTOS} minutos. Revisa la fecha y la hora (a. m. / p. m.).`)
+    }
     setConfirmando(true)
   }
 
@@ -126,7 +133,8 @@ export default function PublicarAlerta() {
         </label>
         <label className="etiqueta max-w-80">
           Vigente hasta
-          <input className="campo font-normal" type="datetime-local" value={form.vigenteHasta} onChange={cambiar('vigenteHasta')} />
+          <input className="campo font-normal" type="datetime-local" min={enHoras(MIN_MINUTOS / 60)} max={enHoras(15 * 24)} value={form.vigenteHasta} onChange={cambiar('vigenteHasta')} />
+          <span className="text-nota font-normal text-tenue">Mínimo {MIN_MINUTOS} minutos y máximo 15 días. Revisa que la hora sea a. m. o p. m.</span>
         </label>
 
         <Aviso tipo="error">{error}</Aviso>
