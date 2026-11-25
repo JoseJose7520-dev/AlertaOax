@@ -26,7 +26,7 @@ import Perfil from './pages/Perfil.jsx'
 
 const MENU_AUTORIDAD = [
   { a: '/autoridad', texto: 'Publicar alerta', corto: 'Publicar', icono: 'megafono', exacta: true },
-  { a: '/autoridad/alertas', texto: 'Mis alertas', icono: 'lista' },
+  { a: '/autoridad/alertas', texto: 'Alertas de mi región', corto: 'Alertas', icono: 'lista' },
   { a: '/autoridad/reportes', texto: 'Reportes ciudadanos', corto: 'Reportes', icono: 'reporte' },
 ]
 const MENU_ADMIN = [
@@ -34,6 +34,7 @@ const MENU_ADMIN = [
   { a: '/admin/autoridades', texto: 'Autoridades', icono: 'escudo' },
   { a: '/admin/usuarios', texto: 'Usuarios', icono: 'usuarios' },
   { a: '/autoridad', texto: 'Publicar alerta', corto: 'Publicar', icono: 'megafono' },
+  { a: '/autoridad/alertas', texto: 'Alertas publicadas', corto: 'Alertas', icono: 'lista' },
 ]
 
 const RUTAS_CIUDADANO = /^\/(mapa|preparate|reportar|reportes|perfil|alertas\/.+)?$/

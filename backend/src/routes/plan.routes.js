@@ -31,7 +31,7 @@ router.get('/', asyncHandler(async (req, res) => {
   res.json({ plan: rows[0] ?? null })
 }))
 
-// PUT /api/plan  Body: { puntoReunion?, albergueId?, contactoExterno?, necesidades?, mochila?: ['agua', ...] }
+// PUT /api/plan  Body: { puntoReunion?, albergueId?, contactoExterno?, necesidades?, mochila?: ['agua', ...], seccion?: 'plan' }
 router.put('/', asyncHandler(async (req, res) => {
   const b = req.body ?? {}
   const puntoReunion = texto(b.puntoReunion, 250, 'punto de reunión')
@@ -41,6 +41,13 @@ router.put('/', asyncHandler(async (req, res) => {
   if (b.albergueId !== undefined && b.albergueId !== null && b.albergueId !== '') {
     albergueId = Number(b.albergueId)
     if (!Number.isInteger(albergueId) || !(await existeAlbergue(albergueId))) throw new ErrorHttp(400, 'El albergue no existe.')
+  }
+  // Al guardar el plan desde su pestaña (seccion: 'plan') se piden los datos mínimos para que sirva en una emergencia.
+  // La mochila usa el mismo endpoint y se guarda sola, por eso ahí no se exigen.
+  if (b.seccion === 'plan') {
+    if (!puntoReunion || puntoReunion.length < 5) throw new ErrorHttp(400, 'Escribe el punto de reunión de tu familia (al menos 5 caracteres).')
+    if (!contactoExterno || contactoExterno.length < 5) throw new ErrorHttp(400, 'Escribe un contacto fuera de la región (nombre y teléfono).')
+    if (!/\d{7,}/.test(contactoExterno.replace(/[\s-]/g, ''))) throw new ErrorHttp(400, 'Incluye el teléfono del contacto fuera de la región.')
   }
   const mochila = Array.isArray(b.mochila) ? [...new Set(b.mochila)].filter((x) => ARTICULOS.includes(x)) : []
 

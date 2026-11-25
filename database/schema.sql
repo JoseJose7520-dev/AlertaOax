@@ -204,3 +204,13 @@ ALTER TABLE albergues ADD COLUMN IF NOT EXISTS fuente VARCHAR(200);
 -- TRUE en los datos de demostración (database/seed-ejemplo.sql); la app los marca como «Dato de ejemplo»
 ALTER TABLE albergues ADD COLUMN IF NOT EXISTS es_ejemplo BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE zonas_riesgo ADD COLUMN IF NOT EXISTS es_ejemplo BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- ============================================================
+-- AO-430: correcciones de la revisión del Equipo 1
+-- ============================================================
+-- Una solicitud de autoridad que aún no se aprueba (o que se rechazó) es una cuenta de ciudadano:
+-- así la persona puede usar la app mientras espera y no se queda sin acceso si la rechazan.
+-- Al aprobarla, la cuenta pasa a rol «autoridad».
+UPDATE usuarios u SET rol = 'ciudadano'
+FROM autoridades a
+WHERE a.usuario_id = u.id AND u.rol = 'autoridad' AND a.estado_validacion <> 'aprobada';

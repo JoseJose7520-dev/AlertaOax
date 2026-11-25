@@ -1,4 +1,4 @@
-import { consulta } from '../config/db.js'
+import { consulta, pool } from '../config/db.js'
 
 /** Conteos para el panel del administrador (una sola consulta). */
 export async function obtenerMetricas() {
@@ -40,7 +40,7 @@ export async function listarAutoridades(estado = null) {
     filtro += ' AND a.estado_validacion = $1'
   }
   const { rows } = await consulta(
-    `SELECT u.id, u.nombre, u.correo, r.nombre AS region, a.institucion, a.estado_validacion,
+    `SELECT u.id, u.nombre, u.correo, u.rol, r.nombre AS region, a.institucion, a.estado_validacion,
             u.creado_en, a.validada_en
      FROM autoridades a
      JOIN usuarios u      ON u.id = a.usuario_id
@@ -52,13 +52,38 @@ export async function listarAutoridades(estado = null) {
   return rows
 }
 
+/**
+ * Aprueba o rechaza una solicitud de autoridad y ajusta el rol de la cuenta en la misma transacción:
+ * aprobada → «autoridad»; rechazada → se queda (o regresa) como «ciudadano», así no pierde el acceso.
+ * Devuelve { nombre, correo, region } para avisarle por correo, o null si la solicitud no existe.
+ */
 export async function validarAutoridad(usuarioId, decision, adminId) {
-  const { rowCount } = await consulta(
-    `UPDATE autoridades SET estado_validacion = $2, validada_por = $3, validada_en = NOW()
-     WHERE usuario_id = $1`,
-    [usuarioId, decision, adminId],
-  )
-  return rowCount > 0
+  const cliente = await pool.connect()
+  try {
+    await cliente.query('BEGIN')
+    const { rowCount } = await cliente.query(
+      `UPDATE autoridades SET estado_validacion = $2, validada_por = $3, validada_en = NOW()
+       WHERE usuario_id = $1`,
+      [usuarioId, decision, adminId],
+    )
+    if (!rowCount) {
+      await cliente.query('ROLLBACK')
+      return null
+    }
+    const { rows } = await cliente.query(
+      `UPDATE usuarios u SET rol = $2
+       WHERE u.id = $1 AND u.rol <> 'administrador'
+       RETURNING u.nombre, u.correo, (SELECT nombre FROM regiones WHERE id = u.region_id) AS region`,
+      [usuarioId, decision === 'aprobada' ? 'autoridad' : 'ciudadano'],
+    )
+    await cliente.query('COMMIT')
+    return rows[0] ?? { nombre: '', correo: null, region: null }
+  } catch (err) {
+    await cliente.query('ROLLBACK')
+    throw err
+  } finally {
+    cliente.release()
+  }
 }
 
 /** Listado de usuarios para el administrador, con búsqueda por nombre o correo y filtro por rol. */

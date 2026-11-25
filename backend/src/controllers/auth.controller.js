@@ -5,19 +5,18 @@ import ErrorHttp from '../utils/ErrorHttp.js'
 import crypto from 'node:crypto'
 import {
   actualizarPerfil, borrarSinVerificar, buscarPorCorreo, buscarPorGoogle, buscarPorId, cambiarPassword,
-  crearUsuario, marcarCorreoVerificado, vincularGoogle, cambiarAvisosCorreo } from '../models/usuario.model.js'
+  crearUsuario, marcarCorreoVerificado, vincularGoogle, cambiarAvisosCorreo, guardarSolicitudAutoridad } from '../models/usuario.model.js'
 import { buscarRegionPorNombre } from '../models/region.model.js'
 import { crearRecuperacion, usarRecuperacion } from '../models/recuperacion.model.js'
 import { comprobarCodigo, guardarCodigo, segundosDesdeEnvio } from '../models/verificacion.model.js'
 import { enviarCodigoVerificacion, enviarRecuperacion } from '../utils/correo.js'
 import { verificarCredencialGoogle } from '../utils/google.js'
+import { errorInstitucion, errorNombre, errorPassword } from '../utils/validaciones.js'
 
 const COSTO_BCRYPT = 10
 const REGEX_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 // Dominios reservados para ejemplos y pruebas: nunca reciben correo (RFC 2606), como «tucorreo@ejemplo.com».
 const DOMINIO_DE_EJEMPLO = /@((.+\.)?(example\.(com|net|org)|ejemplo\.(com|mx|org))|.+\.(test|example|invalid|localhost))$/
-export const PASSWORD_MIN = 8
-export const PASSWORD_MAX = 32
 const MINUTOS_CODIGO = 10
 const ESPERA_REENVIO_SEG = 60
 // Hash de relleno: se compara aunque el correo no exista, para que el tiempo de respuesta no delate si la cuenta existe.
@@ -29,6 +28,10 @@ const datosPublicos = (u) => ({
   id: u.id, nombre: u.nombre, correo: u.correo, rol: u.rol, region: u.region,
   tienePassword: u.password_definida !== false, conGoogle: Boolean(u.google_sub),
   telefono: u.telefono ?? '', avisosCorreo: u.avisos_correo !== false, creadoEn: u.creado_en,
+  // Un ciudadano que pidió ser autoridad ve en qué va su solicitud (pendiente o rechazada)
+  solicitudAutoridad: u.rol === 'ciudadano' && u.estado_validacion
+    ? { estado: u.estado_validacion, institucion: u.institucion }
+    : null,
 })
 const hashToken = (t) => crypto.createHash('sha256').update(t).digest('hex')
 // El código se guarda con HMAC (y el id de la cuenta), así una copia de la base no basta para adivinarlo.
@@ -41,11 +44,10 @@ function validarCorreo(correo) {
   }
 }
 
-/** Reglas de contraseña nuevas (registro, recuperación y cambio). Al iniciar sesión no se revisa el máximo. */
+/** Reglas de contraseña nuevas (registro, recuperación y cambio): 8 a 32 caracteres con letras y números. */
 function validarPassword(password, confirmacion) {
-  if (typeof password !== 'string' || password.length < PASSWORD_MIN || password.length > PASSWORD_MAX) {
-    throw new ErrorHttp(400, `La contraseña debe tener entre ${PASSWORD_MIN} y ${PASSWORD_MAX} caracteres.`)
-  }
+  const error = errorPassword(password)
+  if (error) throw new ErrorHttp(400, error)
   if (confirmacion !== undefined && confirmacion !== password) {
     throw new ErrorHttp(400, 'Las contraseñas no coinciden.')
   }
@@ -83,6 +85,8 @@ async function enviarCodigo(usuario) {
  * POST /api/auth/register
  * Body: { nombre, correo, password, confirmarPassword?, region, perfil: 'ciudadano' | 'autoridad', institucion?, aceptaTerminos: true }
  * El rol administrador NO se puede crear por aquí (se crea con `npm run crear-admin`).
+ * Quien elige «autoridad» entra como ciudadano con una solicitud pendiente: puede usar la app mientras
+ * el administrador valida su cargo, y al aprobarla su cuenta pasa a ser de autoridad.
  */
 export async function registrar(req, res) {
   const { password, perfil } = req.body ?? {}
@@ -91,15 +95,15 @@ export async function registrar(req, res) {
   const nombreRegion = texto(req.body?.region)
   const institucion = texto(req.body?.institucion)
 
-  if (nombre.length < 2 || nombre.length > 120) throw new ErrorHttp(400, 'Escribe tu nombre completo (2 a 120 caracteres).')
-  const telefono = texto(req.body?.telefono).replace(/[\s-]/g, '')
-  if (telefono && !/^\d{10}$/.test(telefono)) throw new ErrorHttp(400, 'El teléfono debe tener 10 dígitos, sin lada internacional.')
+  const errNombre = errorNombre(nombre)
+  if (errNombre) throw new ErrorHttp(400, errNombre)
   validarCorreo(correo)
   validarPassword(password, req.body?.confirmarPassword)
   if (req.body?.aceptaTerminos !== true) throw new ErrorHttp(400, 'Debes aceptar los Términos y Condiciones y el Aviso de Privacidad.')
   if (perfil !== 'ciudadano' && perfil !== 'autoridad') throw new ErrorHttp(400, 'El perfil debe ser ciudadano o autoridad.')
-  if (perfil === 'autoridad' && (institucion.length < 3 || institucion.length > 160)) {
-    throw new ErrorHttp(400, 'Indica tu institución y cargo.')
+  if (perfil === 'autoridad') {
+    const errInst = errorInstitucion(institucion)
+    if (errInst) throw new ErrorHttp(400, errInst)
   }
 
   const region = await buscarRegionPorNombre(nombreRegion)
@@ -111,7 +115,10 @@ export async function registrar(req, res) {
   if (existente) await borrarSinVerificar(existente.id)
 
   const passwordHash = await bcrypt.hash(password, COSTO_BCRYPT)
-  const id = await crearUsuario({ nombre, correo, passwordHash, rol: perfil, regionId: region.id, institucion, correoVerificado: false })
+  const id = await crearUsuario({
+    nombre: nombre.replace(/\s+/g, ' '), correo, passwordHash, regionId: region.id,
+    institucion: perfil === 'autoridad' ? institucion.replace(/\s+/g, ' ') : null, correoVerificado: false,
+  })
   const codigo = await enviarCodigo({ id, correo, nombre })
 
   res.status(201).json({
@@ -142,10 +149,15 @@ export async function verificarCorreo(req, res) {
   }
 
   await marcarCorreoVerificado(usuario.id)
-  if (usuario.rol === 'autoridad') {
-    return res.json({ pendiente: true, mensaje: 'Correo confirmado. El administrador validará tu acreditación y te avisaremos cuando puedas entrar.' })
+  const sesion = emitirSesion(await buscarPorId(usuario.id))
+  if (usuario.estado_validacion === 'pendiente') {
+    return res.json({
+      ...sesion,
+      pendiente: true,
+      mensaje: 'Correo confirmado. Mientras el administrador valida tu cargo, puedes usar AlertaOax como ciudadano. Te avisaremos por correo.',
+    })
   }
-  res.json(emitirSesion(await buscarPorId(usuario.id)))
+  res.json(sesion)
 }
 
 /** POST /api/auth/reenviar-codigo   Body: { correo }. Responde igual exista o no la cuenta. */
@@ -183,7 +195,9 @@ export async function iniciarSesion(req, res) {
     throw new ErrorHttp(403, 'Esta cuenta no es de ciudadano. Elige el perfil de autoridad.')
   }
   if (perfil === 'autoridad' && usuario.rol === 'ciudadano') {
-    throw new ErrorHttp(403, 'Esta cuenta es de ciudadano. Elige el perfil de ciudadano.')
+    throw new ErrorHttp(403, usuario.estado_validacion === 'pendiente'
+      ? 'Tu solicitud de autoridad sigue en revisión. Mientras tanto entra como ciudadano.'
+      : 'Esta cuenta es de ciudadano. Elige el perfil de ciudadano.')
   }
 
   if (!usuario.correo_verificado) {
@@ -230,10 +244,11 @@ export async function restablecerPassword(req, res) {
 }
 
 /**
- * POST /api/auth/google   Body: { credential, region?, aceptaTerminos? }
+ * POST /api/auth/google   Body: { credential, region?, aceptaTerminos?, perfil?, institucion? }
  * - Si la cuenta ya existe (por Google o por el mismo correo), inicia sesión.
- * - Si es nueva, primero responde { registroPendiente, nombre, correo } para que la persona elija su región
- *   y acepte los términos; con esos datos se crea como ciudadano. Las autoridades se registran con formulario.
+ * - Si es nueva, primero responde { registroPendiente, nombre, correo } para que la persona elija su perfil y región
+ *   y acepte los términos. Con perfil «autoridad» se crea como ciudadano con la solicitud pendiente (igual que el
+ *   formulario). No se pide el código de 6 dígitos: Google ya confirmó que el correo es de quien entra.
  */
 export async function accesoGoogle(req, res) {
   const { sub, correo, nombre } = await verificarCredencialGoogle(req.body?.credential)
@@ -253,10 +268,22 @@ export async function accesoGoogle(req, res) {
   if (!region || req.body?.aceptaTerminos !== true) {
     return res.json({ registroPendiente: true, nombre, correo })
   }
+  const esAutoridad = req.body?.perfil === 'autoridad'
+  const institucion = texto(req.body?.institucion).replace(/\s+/g, ' ')
+  if (esAutoridad) {
+    const errInst = errorInstitucion(institucion)
+    if (errInst) throw new ErrorHttp(400, errInst)
+  }
   // Sin contraseña propia: se guarda un hash aleatorio; si después quiere entrar con correo, usa "¿Olvidaste tu contraseña?".
   const passwordHash = await bcrypt.hash(crypto.randomBytes(24).toString('hex'), COSTO_BCRYPT)
-  const id = await crearUsuario({ nombre: nombre.slice(0, 120), correo, passwordHash, rol: 'ciudadano', regionId: region.id, googleSub: sub, passwordDefinida: false })
-  res.status(201).json(emitirSesion(await buscarPorId(id)))
+  const id = await crearUsuario({
+    nombre: nombre.slice(0, 120), correo, passwordHash, regionId: region.id, googleSub: sub, passwordDefinida: false,
+    institucion: esAutoridad ? institucion : null,
+  })
+  const sesion = emitirSesion(await buscarPorId(id))
+  res.status(201).json(esAutoridad
+    ? { ...sesion, pendiente: true, mensaje: 'Tu solicitud de autoridad quedó en revisión. Mientras tanto puedes usar AlertaOax como ciudadano.' }
+    : sesion)
 }
 
 /** GET /api/auth/me — datos del usuario del token (sirve para restaurar la sesión). */
@@ -271,8 +298,11 @@ export async function perfilActual(req, res) {
  * Cualquier cuenta cambia su nombre. Solo el ciudadano cambia su región (la de una autoridad la valida el administrador).
  */
 export async function editarPerfil(req, res) {
-  const nombre = texto(req.body?.nombre)
-  if (nombre.length < 2 || nombre.length > 120) throw new ErrorHttp(400, 'Escribe tu nombre completo (2 a 120 caracteres).')
+  const nombre = texto(req.body?.nombre).replace(/\s+/g, ' ')
+  // La regla del nombre se aplica cuando se cambia (las cuentas viejas o de Google pueden traer un solo nombre)
+  const actual = await buscarPorId(req.usuario.id)
+  const errNombre = nombre === actual?.nombre ? (nombre ? '' : 'Escribe tu nombre.') : errorNombre(nombre)
+  if (errNombre) throw new ErrorHttp(400, errNombre)
   const telefono = texto(req.body?.telefono).replace(/[\s-]/g, '')
   if (telefono && !/^\d{10}$/.test(telefono)) throw new ErrorHttp(400, 'El teléfono debe tener 10 dígitos, sin lada internacional.')
 
@@ -321,6 +351,26 @@ export async function cambiarAvisos(req, res) {
   await cambiarAvisosCorreo(req.usuario.id, req.body.avisosCorreo)
   res.json({
     mensaje: req.body.avisosCorreo ? 'Te avisaremos por correo de las alertas críticas y altas de tu región.' : 'Ya no recibirás avisos de alertas por correo.',
+    usuario: datosPublicos(await buscarPorId(req.usuario.id)),
+  })
+}
+
+/**
+ * POST /api/auth/solicitud-autoridad   (ciudadano)   Body: { institucion }
+ * Un ciudadano pide que su cuenta pase a ser de autoridad en su región. Si ya tiene una solicitud en revisión
+ * no puede mandar otra; si se la rechazaron, puede volver a intentarlo con datos corregidos.
+ */
+export async function solicitarAutoridad(req, res) {
+  if (req.usuario.rol !== 'ciudadano') throw new ErrorHttp(400, 'Tu cuenta ya no es de ciudadano.')
+  const institucion = texto(req.body?.institucion).replace(/\s+/g, ' ')
+  const errInst = errorInstitucion(institucion)
+  if (errInst) throw new ErrorHttp(400, errInst)
+  const usuario = await buscarPorId(req.usuario.id)
+  if (usuario?.estado_validacion === 'pendiente') throw new ErrorHttp(409, 'Ya tienes una solicitud en revisión.')
+  if (!usuario?.region) throw new ErrorHttp(400, 'Elige primero tu región en «Mi perfil».')
+  await guardarSolicitudAutoridad(req.usuario.id, institucion)
+  res.status(201).json({
+    mensaje: `Enviamos tu solicitud para ser autoridad en ${usuario.region}. Te avisaremos por correo cuando el administrador la revise.`,
     usuario: datosPublicos(await buscarPorId(req.usuario.id)),
   })
 }

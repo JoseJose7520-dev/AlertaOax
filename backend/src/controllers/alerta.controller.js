@@ -4,12 +4,13 @@ import ErrorHttp from '../utils/ErrorHttp.js'
 import { buscarPorId } from '../models/usuario.model.js'
 import { buscarRegionPorNombre } from '../models/region.model.js'
 import {
-  autorDeAlerta, buscarAlerta, correosParaAviso, finalizarAlerta, listarActivas, listarPorAutor, publicarAlerta,
+  autorDeAlerta, buscarAlerta, correosParaAviso, finalizarAlerta, listarActivas, listarParaPanel, listarPorAutor, publicarAlerta,
 } from '../models/alerta.model.js'
 
 export const TIPOS = ['sismo', 'huracan', 'inundacion', 'deslizamiento', 'otro']
 export const NIVELES = ['critico', 'alto', 'medio', 'vigilancia']
 const MAX_DIAS_VIGENCIA = 15
+export const MIN_MINUTOS_VIGENCIA = 30
 
 const texto = (v) => (typeof v === 'string' ? v.trim() : '')
 
@@ -31,6 +32,10 @@ export async function publicar(req, res) {
   if (Number.isNaN(vigente.getTime())) throw new ErrorHttp(400, 'Indica hasta cuándo es vigente la alerta.')
   const ahora = Date.now()
   if (vigente.getTime() <= ahora) throw new ErrorHttp(400, 'La vigencia debe ser una fecha futura.')
+  // Una alerta que vence a los pocos minutos desaparece antes de que la población alcance a verla
+  if (vigente.getTime() < ahora + MIN_MINUTOS_VIGENCIA * 60e3) {
+    throw new ErrorHttp(400, `La alerta debe estar vigente al menos ${MIN_MINUTOS_VIGENCIA} minutos.`)
+  }
   if (vigente.getTime() > ahora + MAX_DIAS_VIGENCIA * 864e5) throw new ErrorHttp(400, `La vigencia no puede pasar de ${MAX_DIAS_VIGENCIA} días.`)
 
   const region = await buscarRegionPorNombre(texto(req.body?.region))
@@ -87,6 +92,26 @@ export async function detalle(req, res) {
 /** GET /api/alerts/mine   (autoridad o administrador) */
 export async function mias(req, res) {
   res.json({ alertas: await listarPorAutor(req.usuario.id) })
+}
+
+/**
+ * GET /api/alerts/panel   (autoridad o administrador)
+ * - Autoridad: todas las alertas de su región (las suyas, las de otras autoridades y las del administrador).
+ * - Administrador: las de todo Oaxaca, para revisar lo que publican las autoridades.
+ */
+export async function panel(req, res) {
+  let regionId = null
+  let region = null
+  if (req.usuario.rol === 'autoridad') {
+    const usuario = await buscarPorId(req.usuario.id)
+    region = usuario?.region ?? null
+    regionId = (await buscarRegionPorNombre(region ?? ''))?.id ?? -1
+  }
+  const alertas = await listarParaPanel(regionId)
+  res.json({
+    region,
+    alertas: alertas.map((a) => ({ ...a, es_mia: a.autoridad_id === req.usuario.id })),
+  })
 }
 
 /** PATCH /api/alerts/:id/finalizar   (su autor o un administrador) */

@@ -1,4 +1,5 @@
 import ErrorHttp from '../utils/ErrorHttp.js'
+import { errorDescripcionReporte } from '../utils/validaciones.js'
 import { buscarPorId } from '../models/usuario.model.js'
 import { buscarRegionPorNombre } from '../models/region.model.js'
 import { actualizarEstado, buscarReporte, crearReporte, listarDeUsuario, listarParaAutoridad } from '../models/reporte.model.js'
@@ -26,7 +27,9 @@ export async function crear(req, res) {
   const longitud = coordenada(req.body?.longitud, 180)
 
   if (!TIPOS_REPORTE.includes(tipo)) throw new ErrorHttp(400, 'Elige qué está pasando.')
-  if (descripcion.length < 10 || descripcion.length > 1000) throw new ErrorHttp(400, 'Describe lo que ves (10 a 1000 caracteres).')
+  // Obligatoria pero sin mínimo de caracteres: en una emergencia no hay tiempo de escribir mucho
+  const errDescripcion = errorDescripcionReporte(descripcion)
+  if (errDescripcion) throw new ErrorHttp(400, errDescripcion)
   if ((latitud === null) !== (longitud === null)) throw new ErrorHttp(400, 'La ubicación está incompleta.')
   if (latitud === null && !referencia) throw new ErrorHttp(400, 'Indica tu ubicación o una referencia del lugar.')
   if (referencia && referencia.length > 250) throw new ErrorHttp(400, 'La referencia es muy larga (máximo 250 caracteres).')

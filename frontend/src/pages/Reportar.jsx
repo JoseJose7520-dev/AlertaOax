@@ -5,6 +5,7 @@ import { TIPOS_REPORTE } from '../utils/catalogos.js'
 import { obtenerUbicacion } from '../utils/geo.js'
 import Aviso from '../components/Aviso.jsx'
 import Icono from '../components/Icono.jsx'
+import { errorDescripcionReporte } from '../utils/validaciones.js'
 
 const PASOS = ['Tipo', 'Ubicación', 'Confirmar']
 
@@ -42,7 +43,8 @@ export default function Reportar() {
     if (paso === 1 && !tipo) return setError('Elige qué está pasando.')
     if (paso === 2) {
       if (!ubicacion && referencia.trim().length < 3) return setError('Usa tu ubicación o escribe una referencia del lugar.')
-      if (descripcion.trim().length < 10) return setError('Describe lo que ves con al menos 10 caracteres.')
+      // Obligatoria pero sin mínimo: en una emergencia basta con pocas palabras (p. ej. «Herido»)
+      if (errorDescripcionReporte(descripcion)) return setError(errorDescripcionReporte(descripcion))
     }
     setPaso((p) => p + 1)
   }
@@ -174,8 +176,8 @@ export default function Reportar() {
             <input className="campo font-normal" maxLength={250} placeholder="Ej. Calle Guadalupe, frente a la tienda" value={referencia} onChange={(e) => setReferencia(e.target.value)} />
           </label>
           <label className="etiqueta">
-            Describe lo que ves
-            <textarea className="campo min-h-28 py-3 font-normal" maxLength={1000} placeholder="Ej. Se cayó un árbol y bloquea la calle" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
+            <span>Describe lo que ves <span className="font-normal text-tenue">(obligatorio; basta con pocas palabras)</span></span>
+            <textarea className="campo min-h-28 py-3 font-normal" maxLength={1000} placeholder="Ej. Persona herida, árbol caído en la calle" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
           </label>
         </>
       )}

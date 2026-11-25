@@ -85,7 +85,7 @@ export default function Usuarios() {
                           <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-nota font-bold ${r.clases}`}>
                             <Icono nombre={r.icono} tam={15} peso="fill" /> {r.texto}
                           </span>
-                          {VALIDACION[u.estado_validacion] && <span className="ml-2 text-nota text-riesgo-medio-texto">({u.estado_validacion})</span>}
+                          {VALIDACION[u.estado_validacion] && <span className="ml-2 text-nota text-riesgo-medio-texto">(solicitud de autoridad {u.estado_validacion})</span>}
                         </td>
                         <td className="px-4 py-3">{u.region ?? '—'}</td>
                         <td className="px-4 py-3 text-nota">{u.con_google ? 'Google' : 'Correo y contraseña'}</td>

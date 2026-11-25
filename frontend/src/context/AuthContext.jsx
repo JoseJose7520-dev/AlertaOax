@@ -22,6 +22,23 @@ export function AuthProvider({ children }) {
       .finally(() => setCargando(false))
   }, [cerrarSesion])
 
+  // Al volver a la pestaña se actualizan los datos de la cuenta: si el administrador aprobó la solicitud de
+  // autoridad mientras tanto, la persona pasa a su panel sin tener que cerrar sesión.
+  useEffect(() => {
+    if (!usuario) return undefined
+    const refrescar = () => {
+      if (document.visibilityState !== 'visible' || !sesion.leer()) return
+      api.get('/auth/me').then(({ usuario: u }) => setUsuario(u)).catch(() => {})
+    }
+    document.addEventListener('visibilitychange', refrescar)
+    // Mientras hay una solicitud en revisión, también se consulta cada 2 minutos
+    const reloj = usuario.solicitudAutoridad?.estado === 'pendiente' ? setInterval(refrescar, 120_000) : null
+    return () => {
+      document.removeEventListener('visibilitychange', refrescar)
+      if (reloj) clearInterval(reloj)
+    }
+  }, [usuario])
+
   const iniciarSesion = useCallback(async ({ correo, password, perfil }) => {
     const { token, usuario: u } = await api.post('/auth/login', { correo, password, perfil })
     sesion.guardar(token)

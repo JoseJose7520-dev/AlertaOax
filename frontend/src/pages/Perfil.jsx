@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { api } from '../services/api.js'
 import { REGIONES } from '../utils/catalogos.js'
 import { PASSWORD_MAX, errorPassword } from '../utils/password.js'
+import { INSTITUCION_MAX, errorInstitucion, errorNombre } from '../utils/validaciones.js'
 import Aviso from '../components/Aviso.jsx'
 import Campo from '../components/Campo.jsx'
 import Icono from '../components/Icono.jsx'
@@ -31,7 +32,8 @@ function DatosPersonales() {
     api.get('/regions').then((r) => setRegiones(r.regiones.map((x) => x.nombre))).catch(() => {})
   }, [esCiudadano])
 
-  const errNombre = nombre.trim().length < 2 ? 'Escribe tu nombre completo.' : ''
+  // La regla del nombre (nombre y apellido, solo letras) se aplica al cambiarlo
+  const errNombre = nombre.trim() === usuario.nombre ? '' : errorNombre(nombre)
   const errTelefono = telefono && !/^\d{10}$/.test(telefono) ? 'Escribe 10 dígitos, por ejemplo 9511234567.' : ''
   const sinCambios = nombre.trim() === usuario.nombre && telefono === (usuario.telefono ?? '') &&
     (!esCiudadano || region === usuario.region)
@@ -103,7 +105,70 @@ function DatosPersonales() {
   )
 }
 
-/** Cambio de contraseña. Una cuenta creada con Google que nunca tuvo contraseña la crea sin escribir la actual. */
+/**
+ * Un ciudadano que trabaja en Protección Civil pide que su cuenta sea de autoridad.
+ * Mientras el administrador decide, sigue usando la app como ciudadano.
+ */
+function SolicitudAutoridad() {
+  const { usuario, actualizarUsuario } = useAuth()
+  const solicitud = usuario.solicitudAutoridad
+  const [abierto, setAbierto] = useState(false)
+  const [institucion, setInstitucion] = useState('')
+  const [intento, setIntento] = useState(false)
+  const [enviando, setEnviando] = useState(false)
+  const [error, setError] = useState('')
+  const [exito, setExito] = useState('')
+  const errInst = errorInstitucion(institucion)
+
+  async function enviar(e) {
+    e.preventDefault()
+    setIntento(true); setError(''); setExito('')
+    if (errInst) return
+    setEnviando(true)
+    try {
+      const r = await api.post('/auth/solicitud-autoridad', { institucion })
+      actualizarUsuario(r.usuario)
+      setExito(r.mensaje); setAbierto(false); setInstitucion(''); setIntento(false)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setEnviando(false)
+    }
+  }
+
+  return (
+    <section className="tarjeta flex flex-col gap-3 p-5" aria-labelledby="solicitud-titulo">
+      <div className="flex items-start gap-3">
+        <span className="icono-caja size-11 shrink-0 bg-acento-claro text-acento dark:text-acento-fuerte"><Icono nombre="escudo" tam={22} /></span>
+        <div>
+          <h2 id="solicitud-titulo" className="text-subtitulo font-bold">¿Trabajas en Protección Civil?</h2>
+          <p className="text-nota text-tenue">Solicita que tu cuenta sea de <strong>autoridad</strong> para publicar alertas y atender reportes en {usuario.region ? <>la región <strong>{usuario.region}</strong></> : 'tu región'}. El administrador validará tu cargo.</p>
+        </div>
+      </div>
+      {solicitud?.estado === 'pendiente' ? (
+        <Aviso tipo="info">Tu solicitud ({solicitud.institucion}) está en revisión. Te avisaremos por correo.</Aviso>
+      ) : abierto ? (
+        <form onSubmit={enviar} className="flex flex-col gap-3" noValidate>
+          <Campo etiqueta="Institución y cargo" icono="escudo" maxLength={INSTITUCION_MAX}
+            placeholder="Ej. Protección Civil de San Pedro Pochutla, coordinadora"
+            value={institucion} onChange={(e) => setInstitucion(e.target.value)} error={intento ? errInst : undefined} />
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <button type="submit" className="btn-principal" disabled={enviando}>{enviando ? 'Enviando…' : 'Enviar solicitud'}</button>
+            <button type="button" className="btn-neutro min-h-13" onClick={() => { setAbierto(false); setIntento(false) }}>Cancelar</button>
+          </div>
+        </form>
+      ) : (
+        <>
+          {solicitud?.estado === 'rechazada' && <Aviso tipo="info">Tu solicitud anterior no fue aprobada. Puedes enviar otra con tu institución y cargo completos.</Aviso>}
+          <button type="button" className="btn-neutro self-start" onClick={() => { setAbierto(true); setExito('') }}>Solicitar cuenta de autoridad</button>
+        </>
+      )}
+      <Aviso tipo="error">{error}</Aviso>
+      <Aviso tipo="exito">{exito}</Aviso>
+    </section>
+  )
+}
+
 /** Aviso por correo de alertas críticas y altas de la región. Se guarda al momento. */
 function AvisosCorreo() {
   const { usuario, actualizarUsuario } = useAuth()
@@ -149,6 +214,7 @@ function AvisosCorreo() {
   )
 }
 
+/** Cambio de contraseña. Una cuenta creada con Google que nunca tuvo contraseña la crea sin escribir la actual. */
 function CambiarPassword() {
   const { usuario, cerrarSesion } = useAuth()
   const tiene = usuario.tienePassword !== false
@@ -250,6 +316,7 @@ export default function Perfil() {
 
       <DatosPersonales />
       <AvisosCorreo />
+      {usuario.rol === 'ciudadano' && <SolicitudAutoridad />}
       <CambiarPassword />
 
       <button type="button" onClick={cerrarSesion} className="btn-neutro self-start">

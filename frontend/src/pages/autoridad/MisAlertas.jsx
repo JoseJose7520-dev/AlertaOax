@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext.jsx'
 import { useApi } from '../../hooks/useApi.js'
 import { api } from '../../services/api.js'
 import { ICONO_TIPO, NIVELES, TIPOS_ALERTA, fechaCorta, haceCuanto } from '../../utils/catalogos.js'
@@ -22,8 +23,8 @@ function Dato({ etiqueta, valor, icono }) {
   )
 }
 
-/** Alerta publicada: franja de nivel, vigencia, personas notificadas y botón Terminar. */
-function TarjetaPublicada({ a, onTerminar }) {
+/** Alerta publicada: franja de nivel, vigencia, personas notificadas, quién la publicó y botón Terminar. */
+function TarjetaPublicada({ a, onTerminar, puedeTerminar }) {
   const n = NIVELES[a.nivel] ?? NIVELES.vigilancia
   return (
     <li className={`tarjeta relative flex flex-col gap-3 overflow-hidden p-4 pl-5 md:flex-row md:items-center md:gap-4 ${a.vigente ? '' : 'opacity-75'}`}>
@@ -41,13 +42,17 @@ function TarjetaPublicada({ a, onTerminar }) {
           <span className="text-nota text-tenue">
             {TIPOS_ALERTA[a.tipo]} · {a.region} · publicada {haceCuanto(a.emitida_en)} · {a.vigente ? `hasta ${fechaCorta(a.vigente_hasta)}` : `terminó ${fechaCorta(a.vigente_hasta)}`}
           </span>
+          <span className="flex items-center gap-1.5 text-nota text-tinta-suave">
+            <Icono nombre="escudo" tam={16} className="text-tenue" />
+            {a.es_mia ? 'La publicaste tú' : <>Publicó <strong className="font-semibold">{a.autor}</strong> · {a.institucion}</>}
+          </span>
         </div>
       </div>
       <div className="flex items-center justify-between gap-3 md:shrink-0 md:justify-end">
         <span className="flex items-center gap-1.5 text-nota text-tinta-suave" title="Personas notificadas">
           <Icono nombre="campana" tam={18} className="text-tenue" /> <strong className="text-texto">{a.notificados}</strong> notificadas
         </span>
-        {a.vigente && (
+        {a.vigente && puedeTerminar && (
           <button type="button" onClick={() => onTerminar(a)} className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border-[1.5px] border-riesgo-critico/50 px-3.5 text-nota font-bold text-riesgo-critico-texto hover:bg-riesgo-critico-fondo">
             <Icono nombre="cerrar" tam={16} peso="bold" /> Terminar
           </button>
@@ -58,7 +63,17 @@ function TarjetaPublicada({ a, onTerminar }) {
 }
 
 export default function MisAlertas() {
-  const { datos, cargando, error, recargar } = useApi('/alerts/mine')
+  const { usuario } = useAuth()
+  const esAdmin = usuario?.rol === 'administrador'
+  // Se recarga sola cada minuto: así una alerta que ya venció no se queda marcada como «Vigente»
+  const { datos, cargando, error, recargar } = useApi('/alerts/panel', { intervalo: 60_000 })
+  const [ahora, setAhora] = useState(() => Date.now())
+  useEffect(() => {
+    const reloj = setInterval(() => setAhora(Date.now()), 30_000)
+    return () => clearInterval(reloj)
+  }, [])
+  // «Mías»: las que publicó esta cuenta. «De mi región» (autoridad) o «Todas» (administrador): las de todos.
+  const [ambito, setAmbito] = useState('mias')
   const [aviso, setAviso] = useState({ tipo: 'info', texto: '' })
   const [filtro, setFiltro] = useState('vigentes')
   const [terminando, setTerminando] = useState(null)
@@ -77,17 +92,22 @@ export default function MisAlertas() {
     }
   }
 
-  const alertas = datos?.alertas ?? []
+  const todas = (datos?.alertas ?? []).map((a) => ({ ...a, vigente: a.vigente && new Date(a.vigente_hasta).getTime() > ahora }))
+  const alertas = ambito === 'mias' ? todas.filter((a) => a.es_mia) : todas
   const vigentes = alertas.filter((a) => a.vigente)
   const lista = filtro === 'vigentes' ? vigentes : filtro === 'terminadas' ? alertas.filter((a) => !a.vigente) : alertas
   const notificados = alertas.reduce((s, a) => s + Number(a.notificados || 0), 0)
 
   return (
     <section className="flex max-w-5xl flex-col gap-4">
-      <Encabezado rotulo="Panel de autoridad" titulo="Mis alertas" icono="lista"
+      <Encabezado rotulo={esAdmin ? 'Administración' : 'Panel de autoridad'} titulo={esAdmin ? 'Alertas publicadas' : 'Alertas'} icono="lista"
         acciones={<Link to="/autoridad" className="btn-principal"><Icono nombre="megafono" tam={20} peso="fill" /> Nueva alerta</Link>}>
-        Alertas que publicaste. Termina una alerta si el riesgo pasó antes de lo previsto.
+        {esAdmin
+          ? 'Revisa las alertas que publican las autoridades de todo Oaxaca. Puedes terminar cualquiera que no corresponda.'
+          : `Las que publicaste y las que publicaron otras autoridades o el administrador para ${datos?.region ?? 'tu región'}. Termina las tuyas si el riesgo pasó antes de lo previsto.`}
       </Encabezado>
+      <Filtros etiqueta="Qué alertas ver" valor={ambito} onCambio={setAmbito}
+        opciones={[['mias', 'Publicadas por mí'], ['todas', esAdmin ? 'Todas las de Oaxaca' : `Toda mi región${datos?.region ? ` (${datos.region})` : ''}`]]} />
       {datos && (
         <div className="grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-3">
           <Dato etiqueta="Vigentes ahora" valor={vigentes.length} icono="sirena" />
@@ -101,11 +121,11 @@ export default function MisAlertas() {
       {cargando && <Cargando />}
       <Aviso tipo="error">{error}</Aviso>
       {datos && lista.length === 0 && (
-        <p className="tarjeta p-5 text-tenue">{alertas.length === 0 ? 'Aún no has publicado alertas.' : 'No hay alertas con este filtro.'}</p>
+        <p className="tarjeta p-5 text-tenue">{alertas.length === 0 ? (ambito === 'mias' ? 'Aún no has publicado alertas.' : 'Todavía no hay alertas publicadas.') : 'No hay alertas con este filtro.'}</p>
       )}
       {lista.length > 0 && (
         <ul className="flex flex-col gap-2.5">
-          {lista.map((a) => <TarjetaPublicada key={a.id} a={a} onTerminar={setTerminando} />)}
+          {lista.map((a) => <TarjetaPublicada key={a.id} a={a} onTerminar={setTerminando} puedeTerminar={a.es_mia || esAdmin} />)}
         </ul>
       )}
       <Confirmar
