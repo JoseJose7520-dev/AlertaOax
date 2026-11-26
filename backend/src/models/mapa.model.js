@@ -10,7 +10,7 @@ export async function listarAlbergues(regionId = null) {
   }
   const { rows } = await consulta(
     `SELECT a.id, a.nombre, a.direccion, a.latitud::float AS latitud, a.longitud::float AS longitud,
-            a.capacidad, a.ocupacion, (a.capacidad - a.ocupacion) AS libres, a.telefono, a.fuente, a.es_ejemplo,
+            a.capacidad, a.ocupacion, (a.capacidad - a.ocupacion) AS libres, a.telefono, a.fuente, a.nota, a.es_ejemplo,
             r.nombre AS region
      FROM albergues a JOIN regiones r ON r.id = a.region_id
      ${filtro}

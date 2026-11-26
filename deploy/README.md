@@ -9,7 +9,7 @@ bash ~/AlertaOax/deploy/desplegar.sh
 El script hace, en orden, y se detiene en el primer error:
 
 1. Descarga la última versión de `main` (se niega si hay cambios sin guardar en el servidor).
-2. Instala las dependencias del backend y aplica las migraciones (`npm run db:init`, que se puede repetir) y actualiza los albergues oficiales (`npm run db:albergues`).
+2. Instala las dependencias del backend y aplica las migraciones (`npm run db:init`, que se puede repetir) y actualiza los albergues oficiales (`npm run db:albergues -- --solo-reales`, que además quita los albergues de ejemplo para que en el mapa solo haya refugios reales).
 3. Reinicia la API con PM2 (`alertaoax-api`).
 4. Compila el frontend (`npm run build`).
 5. Publica la compilación en `/var/www/alertaoax` (conserva los archivos de verificación de Google Search Console).

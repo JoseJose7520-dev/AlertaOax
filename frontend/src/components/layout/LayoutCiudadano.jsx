@@ -88,7 +88,8 @@ export default function LayoutCiudadano() {
             <button
               type="button"
               onClick={cerrarSesion}
-              className="inline-flex size-11 items-center justify-center rounded-xl text-tenue hover:bg-hundido hover:text-tinta"
+              // En celular no cabe junto a los demás botones (desbordaba a 360-414 px): ahí se cierra sesión desde «Mi perfil»
+              className="hidden size-11 items-center justify-center rounded-xl text-tenue hover:bg-hundido hover:text-tinta sm:inline-flex"
               aria-label="Cerrar sesión"
               title="Cerrar sesión"
             >

@@ -7,6 +7,7 @@ import { PASSWORD_MAX, errorPassword } from '../utils/password.js'
 import { INSTITUCION_MAX, errorInstitucion, errorNombre } from '../utils/validaciones.js'
 import Aviso from '../components/Aviso.jsx'
 import Campo from '../components/Campo.jsx'
+import Confirmar from '../components/Confirmar.jsx'
 import Icono from '../components/Icono.jsx'
 
 const ROLES = { ciudadano: 'Ciudadano', autoridad: 'Autoridad', administrador: 'Administrador' }
@@ -287,6 +288,84 @@ function CambiarPassword() {
   )
 }
 
+const PALABRA_ELIMINAR = 'ELIMINAR'
+
+/**
+ * AO-425: cancelación de datos (derechos ARCO). Pide la contraseña, o escribir ELIMINAR si la cuenta es de Google
+ * y nunca tuvo contraseña. Los reportes se conservan sin nombre para no perder el historial de Protección Civil.
+ */
+function EliminarCuenta() {
+  const { usuario, cerrarSesion } = useAuth()
+  const tiene = usuario.tienePassword !== false
+  const [abierto, setAbierto] = useState(false)
+  const [valor, setValor] = useState('')
+  const [intento, setIntento] = useState(false)
+  const [enviando, setEnviando] = useState(false)
+  const [error, setError] = useState('')
+
+  const errValor = tiene
+    ? (valor ? '' : 'Escribe tu contraseña.')
+    : (valor.trim().toUpperCase() === PALABRA_ELIMINAR ? '' : `Escribe ${PALABRA_ELIMINAR} para confirmar.`)
+
+  function abrir() { setValor(''); setIntento(false); setError(''); setAbierto(true) }
+
+  async function confirmar() {
+    setIntento(true); setError('')
+    if (errValor) return
+    setEnviando(true)
+    try {
+      const r = await api.borrar('/auth/cuenta', tiene ? { password: valor } : { confirmacion: valor.trim() })
+      try { sessionStorage.setItem('avisoAcceso', r.mensaje) } catch { /* sin almacenamiento */ }
+      setAbierto(false)
+      cerrarSesion()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setEnviando(false)
+    }
+  }
+
+  return (
+    <section className="tarjeta flex flex-col gap-3 border border-riesgo-critico/30 p-5" aria-labelledby="eliminar-titulo">
+      <div className="flex items-start gap-3">
+        <span className="icono-caja size-11 shrink-0 bg-riesgo-critico-fondo text-riesgo-critico-texto"><Icono nombre="eliminar" tam={22} /></span>
+        <div>
+          <h2 id="eliminar-titulo" className="text-subtitulo font-bold">Eliminar mi cuenta</h2>
+          <p className="text-nota text-tenue">
+            Se borran tu cuenta, tus planes familiares, tu mochila y tus notificaciones. No se puede deshacer.
+            Los reportes que enviaste se conservan <strong>sin tu nombre</strong> para que Protección Civil no pierda el historial.
+          </p>
+        </div>
+      </div>
+      <button type="button" onClick={abrir}
+        className="inline-flex min-h-11 items-center gap-2 self-start rounded-2xl border border-riesgo-critico/50 px-4 font-bold text-riesgo-critico-texto hover:bg-riesgo-critico-fondo">
+        <Icono nombre="eliminar" tam={20} /> Eliminar mi cuenta
+      </button>
+      <Confirmar
+        abierto={abierto}
+        titulo="¿Eliminar tu cuenta para siempre?"
+        tono="peligro"
+        icono="eliminar"
+        textoConfirmar="Sí, eliminar mi cuenta"
+        textoCancelar="Cancelar"
+        enviando={enviando}
+        onConfirmar={confirmar}
+        onCancelar={() => setAbierto(false)}
+      >
+        <p>Se borrará la cuenta <strong>{usuario.correo}</strong> y no podrás recuperarla. Si después quieres usar AlertaOax, tendrás que registrarte de nuevo.</p>
+        {tiene ? (
+          <Campo etiqueta="Escribe tu contraseña para confirmar" icono="candado" tipo="password" autoComplete="current-password"
+            value={valor} onChange={(e) => setValor(e.target.value)} error={intento ? errValor : undefined} />
+        ) : (
+          <Campo etiqueta={`Tu cuenta es de Google. Escribe ${PALABRA_ELIMINAR} para confirmar`} icono="alerta" autoComplete="off"
+            value={valor} onChange={(e) => setValor(e.target.value)} error={intento ? errValor : undefined} />
+        )}
+        <Aviso tipo="error">{error}</Aviso>
+      </Confirmar>
+    </section>
+  )
+}
+
 /** «Mi perfil»: misma página para ciudadano, autoridad y administrador. */
 export default function Perfil() {
   const { usuario, cerrarSesion } = useAuth()
@@ -318,6 +397,7 @@ export default function Perfil() {
       <AvisosCorreo />
       {usuario.rol === 'ciudadano' && <SolicitudAutoridad />}
       <CambiarPassword />
+      {usuario.rol !== 'administrador' && <EliminarCuenta />}
 
       <button type="button" onClick={cerrarSesion} className="btn-neutro self-start">
         <Icono nombre="salir" tam={20} /> Cerrar sesión

@@ -1,11 +1,15 @@
 # Albergues (refugios temporales) OFICIALES de Oaxaca para AlertaOax.
-# Fuente de nombres y localidades: listados de la Coordinación Estatal de Protección Civil y Gestión de Riesgos (CEPCyGR),
+# Solo se agregan lugares que una autoridad (CEPCyGR, ayuntamiento o DIF) publicó como refugio temporal. Nada inventado.
+# Costa: listados de la Coordinación Estatal de Protección Civil y Gestión de Riesgos (CEPCyGR),
 # temporada de lluvias y ciclones 2026 (publicados en mayo-junio de 2026).
+# Valles Centrales: la CEPCyGR no publica una lista fija para esta región; los refugios se abren cuando hay una emergencia.
+# Se agregan los lugares que las autoridades ya habilitaron como refugio; la columna «nota» dice cuándo y por qué.
+# IMPORTANTE: un refugio temporal NO está abierto siempre. La app lo avisa en cada tarjeta.
 # Cómo completar latitud y longitud: busca el lugar en Google Maps → clic derecho sobre el edificio → clic en los números
 # (se copian como «15.8613, -97.0742») → pega cada número en su columna. Sin coordenadas, la fila no se carga.
 # capacidad y telefono: déjalos vacíos si Protección Civil no los publica (la app mostrará «Cupo no reportado»).
 # Después: cd backend && npm run db:albergues
-region,municipio,localidad,nombre,latitud,longitud,capacidad,telefono,fuente
+region,municipio,localidad,nombre,latitud,longitud,capacidad,telefono,fuente,nota
 Costa,San Pedro Mixtepec,Puerto Escondido,CONALEP No. 158,15.872237916161417,-97.07397590674643,,,"CEPCyGR Oaxaca, refugios temporales jun-2026"
 Costa,San Pedro Mixtepec,Puerto Escondido,CBTIS No. 240,15.88008528932965,-97.08739283003224,,,"CEPCyGR Oaxaca, refugios temporales jun-2026"
 Costa,San Pedro Mixtepec,Puerto Escondido,Escuela Secundaria Técnica No. 86,15.87146521855022,-97.07083133558213,,,"CEPCyGR Oaxaca, refugios temporales jun-2026"
@@ -22,3 +26,6 @@ Costa,Santiago Pinotepa Nacional,Pinotepa Nacional,TecNM Campus Pinotepa,16.3499
 Costa,Santiago Pinotepa Nacional,Pinotepa Nacional,CBTA No. 10,16.346379670090617,-98.04543690674643,,,"CEPCyGR Oaxaca, refugios temporales jun-2026"
 Costa,San Andrés Huaxpaltepec,Huaxpaltepec,Casa de la Cultura Los Tatamandones,,,,,"CEPCyGR Oaxaca, refugios temporales jun-2026"
 Costa,Santiago Llano Grande,Llano Grande,CBTIS No. 2 (Llano Grande),16.488741371545963,-98.28621486256789,,,"CEPCyGR Oaxaca, refugios temporales jun-2026"
+Valles Centrales,Santa María Atzompa,"Independencia S/N, 1a. sección",Salón de usos múltiples del Palacio Municipal de Santa María Atzompa,17.1029794,-96.7797023,,,"CEPCyGR Oaxaca, comunicado del 4-abr-2025","Se habilitó como refugio temporal para 20 familias por el incendio del basurero municipal (abril de 2025)."
+Valles Centrales,Santa Cruz Xoxocotlán,"Guillermo A. Varela 9, Esquipulas",Agencia Municipal de Esquipulas,17.0146895,-96.7458153,,,"Gobierno de Oaxaca y Ayuntamiento de Santa Cruz Xoxocotlán, sep-2017","Se habilitó como refugio temporal para 58 familias afectadas por la tormenta tropical Lidia (septiembre de 2017)."
+Valles Centrales,Oaxaca de Juárez,"Calle Esteban Baca Calderón, U.H. Infonavit 1° de Mayo",Gimnasio Municipal de Oaxaca de Juárez,17.0835142,-96.7098828,,,"DIF y Protección Civil de Oaxaca de Juárez, ene-2019","Se habilitó como refugio temporal invernal para personas en situación de calle (temporada 2018-2019)."

@@ -76,6 +76,7 @@ Todas las respuestas de error tienen la forma `{ "mensaje": "..." }`.
 | PATCH | `/api/auth/perfil` | Con token | `{ nombre, telefono?, region? }`; teléfono de 10 dígitos opcional; la región solo la cambia el ciudadano |
 | PATCH | `/api/auth/avisos` | Con token | `{ avisosCorreo: true/false }`: aviso por correo de alertas críticas y altas de la región |
 | POST | `/api/auth/password` | Con token | `{ actual, password, confirmarPassword }`; cambia la contraseña y cierra todas las sesiones abiertas |
+| DELETE | `/api/auth/cuenta` | Con token (no admin) | `{ password }` (o `{ confirmacion: "ELIMINAR" }` si la cuenta es de Google): borra la cuenta y sus datos; los reportes quedan anónimos. Una autoridad con alertas publicadas recibe 409 |
 | GET | `/api/config` | Público | Configuración pública del frontend (`googleClientId`, `contacto`) |
 | POST | `/api/alerts/publish` | Autoridad aprobada, admin | Publica una alerta y notifica a la región (transacción) |
 | GET | `/api/alerts/active` | Con token | Alertas vigentes de la región del usuario (`?todas=1`: todo Oaxaca) |
@@ -85,15 +86,19 @@ Todas las respuestas de error tienen la forma `{ "mensaje": "..." }`.
 | GET | `/api/notifications` | Con token | Notificaciones del usuario y cuántas no ha leído |
 | PATCH | `/api/notifications/:id/leida` | Con token | Marca una notificación como leída |
 | PATCH | `/api/notifications/leer-todas` | Con token | Marca todas como leídas |
-| GET | `/api/shelters?region=Costa` | Con token | Albergues abiertos (`region=todas` para todo Oaxaca) |
+| GET | `/api/shelters?region=Costa` | Con token | Albergues y refugios registrados, con `fuente` y `nota` (`region=todas` para todo Oaxaca) |
 | GET | `/api/risk-zones?region=Costa` | Con token | Zonas de riesgo (círculo: centro y radio) |
 | POST | `/api/reports` | Ciudadano | Reporte de incidencia (estado inicial `recibido`) |
 | GET | `/api/reports/mine` | Ciudadano | Reportes propios con su estado |
 | GET | `/api/reports?estado=recibido` | Autoridad, admin | Reportes de la región de la autoridad |
+| GET | `/api/reports/export?estado=` | Autoridad, admin | Descarga en CSV (UTF-8, abre en Excel) con el mismo filtro; la autoridad solo su región |
 | PATCH | `/api/reports/:id/estado` | Autoridad de la región, admin | Cambia a `en_atencion` o `atendido`, con nota opcional |
-| GET / PUT | `/api/plan` | Ciudadano | Plan familiar y mochila de emergencia |
+| GET / PUT | `/api/plan` | Ciudadano | Mochila de emergencia (`{ mochila: [...] }`) |
+| GET / POST | `/api/plan/planes` | Ciudadano | Planes familiares de la cuenta (hasta 10): `{ nombre, puntoReunion, contactoExterno, albergueId?, necesidades? }` |
+| GET / PUT / DELETE | `/api/plan/planes/:id` | Ciudadano dueño | Ver, editar o eliminar un plan |
 | GET | `/api/admin/metrics` | Admin | Conteos para el panel estadístico |
 | GET | `/api/admin/users?rol=&buscar=&pagina=` | Admin | Lista paginada de cuentas (20 por página) |
+| PATCH | `/api/admin/users/:id/activo` | Admin | `{ activo: true/false }`; al desactivar, la cuenta no entra y sus sesiones se cierran. No puede desactivarse a sí mismo |
 | GET | `/api/admin/authorities?estado=pendiente` | Admin | Solicitudes de autoridad |
 | PUT | `/api/admin/authorities/:id/validate` | Admin | `{ "decision": "aprobada" \| "rechazada" }` |
 

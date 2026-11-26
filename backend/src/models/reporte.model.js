@@ -3,10 +3,10 @@ import { consulta } from '../config/db.js'
 const SELECT_REPORTE = `
   SELECT rp.id, rp.tipo, rp.descripcion, rp.latitud::float AS latitud, rp.longitud::float AS longitud,
          rp.referencia, rp.estado, rp.nota_autoridad, rp.creado_en, rp.actualizado_en,
-         r.nombre AS region, u.nombre AS ciudadano, u.telefono AS telefono_ciudadano
+         r.nombre AS region, COALESCE(u.nombre, 'Cuenta eliminada') AS ciudadano, u.telefono AS telefono_ciudadano
   FROM reportes rp
-  JOIN regiones r ON r.id = rp.region_id
-  JOIN usuarios u ON u.id = rp.usuario_id`
+  JOIN regiones r      ON r.id = rp.region_id
+  LEFT JOIN usuarios u ON u.id = rp.usuario_id` // LEFT: si la persona borró su cuenta, el reporte se conserva anónimo
 
 export async function crearReporte({ usuarioId, regionId, tipo, descripcion, latitud, longitud, referencia }) {
   const { rows } = await consulta(
@@ -51,4 +51,15 @@ export async function actualizarEstado(id, { estado, nota, autoridadId }) {
     [id, estado, nota, autoridadId],
   )
   return rowCount > 0
+}
+
+/** Todos los reportes para descargar en CSV (de una región o de todas si regionId es null), sin el límite de 100. */
+export async function listarParaExportar(regionId = null, estado = null) {
+  const params = []
+  const condiciones = []
+  if (regionId) { params.push(regionId); condiciones.push(`rp.region_id = $${params.length}`) }
+  if (estado) { params.push(estado); condiciones.push(`rp.estado = $${params.length}`) }
+  const filtro = condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : ''
+  const { rows } = await consulta(`${SELECT_REPORTE} ${filtro} ORDER BY rp.creado_en DESC`, params)
+  return rows
 }

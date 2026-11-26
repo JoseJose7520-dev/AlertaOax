@@ -1,6 +1,7 @@
 // Carga o actualiza los albergues OFICIALES de database/albergues-oficiales.csv.
 // Uso: npm run db:albergues                      (agrega o actualiza; se puede repetir)
 //      npm run db:albergues -- --quitar-ejemplo  (además borra los albergues y zonas de ejemplo)
+//      npm run db:albergues -- --solo-reales     (borra solo los albergues de ejemplo; las zonas de riesgo se quedan)
 // Las filas sin latitud/longitud se saltan y se listan al final para completarlas.
 import fs from 'node:fs'
 import path from 'node:path'
@@ -11,6 +12,7 @@ import { dbConfig } from '../src/config/dbConfig.js'
 const carpeta = path.dirname(fileURLToPath(import.meta.url))
 const archivo = path.resolve(carpeta, '../../database/albergues-oficiales.csv')
 const quitarEjemplo = process.argv.includes('--quitar-ejemplo')
+const soloReales = process.argv.includes('--solo-reales')
 
 /** Lee un CSV sencillo (separado por comas, con comillas dobles opcionales). */
 function leerCsv(texto) {
@@ -52,17 +54,22 @@ try {
     if (lat < 15 || lat > 18.8 || lon < -98.6 || lon > -93.8) { pendientes.push(`${etiqueta}: las coordenadas no están en Oaxaca`); continue }
     const capacidad = f.capacidad ? Number(f.capacidad) : null
     await cliente.query(
-      `INSERT INTO albergues (region_id, nombre, direccion, latitud, longitud, capacidad, ocupacion, telefono, fuente, es_ejemplo)
-       VALUES ($1, $2, $3, $4, $5, $6, 0, $7, $8, FALSE)
+      `INSERT INTO albergues (region_id, nombre, direccion, latitud, longitud, capacidad, ocupacion, telefono, fuente, nota, es_ejemplo)
+       VALUES ($1, $2, $3, $4, $5, $6, 0, $7, $8, $9, FALSE)
        ON CONFLICT (region_id, nombre) DO UPDATE SET
          direccion = EXCLUDED.direccion, latitud = EXCLUDED.latitud, longitud = EXCLUDED.longitud,
-         capacidad = EXCLUDED.capacidad, telefono = EXCLUDED.telefono, fuente = EXCLUDED.fuente, es_ejemplo = FALSE,
+         capacidad = EXCLUDED.capacidad, telefono = EXCLUDED.telefono, fuente = EXCLUDED.fuente, nota = EXCLUDED.nota,
+         es_ejemplo = FALSE,
          ocupacion = LEAST(albergues.ocupacion, COALESCE(EXCLUDED.capacidad, albergues.ocupacion))`,
-      [idRegion[f.region], f.nombre, `${f.localidad}, ${f.municipio}`, lat, lon, capacidad, f.telefono || null, f.fuente || null],
+      [idRegion[f.region], f.nombre, `${f.localidad}, ${f.municipio}`, lat, lon, capacidad, f.telefono || null, f.fuente || null, f.nota || null],
     )
     cargados++
   }
 
+  if (soloReales && !quitarEjemplo) {
+    const a = await cliente.query('DELETE FROM albergues WHERE es_ejemplo = TRUE')
+    console.log(`Albergues de ejemplo borrados: ${a.rowCount}. En el mapa solo quedan refugios reales.`)
+  }
   if (quitarEjemplo) {
     const a = await cliente.query('DELETE FROM albergues WHERE es_ejemplo = TRUE')
     const z = await cliente.query('DELETE FROM zonas_riesgo WHERE es_ejemplo = TRUE')

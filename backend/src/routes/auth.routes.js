@@ -4,7 +4,7 @@ import { asyncHandler } from '../utils/asyncHandler.js'
 import { verificarToken } from '../middlewares/verificarToken.js'
 import { bloquearBots } from '../middlewares/antiSpam.js'
 import {
-  accesoGoogle, cambiarAvisos, cambiarMiPassword, editarPerfil, iniciarSesion, olvidePassword, perfilActual, reenviarCodigo,
+  accesoGoogle, cambiarAvisos, cambiarMiPassword, editarPerfil, eliminarMiCuenta, iniciarSesion, olvidePassword, perfilActual, reenviarCodigo,
   registrar, restablecerPassword, solicitarAutoridad, verificarCorreo,
 } from '../controllers/auth.controller.js'
 
@@ -40,5 +40,6 @@ router.patch('/perfil', verificarToken, asyncHandler(editarPerfil))
 router.patch('/avisos', verificarToken, asyncHandler(cambiarAvisos))
 router.post('/password', limitarIntentos, verificarToken, asyncHandler(cambiarMiPassword))
 router.post('/solicitud-autoridad', limitarIntentos, verificarToken, asyncHandler(solicitarAutoridad))
+router.delete('/cuenta', limitarIntentos, verificarToken, asyncHandler(eliminarMiCuenta))
 
 export default router

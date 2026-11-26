@@ -5,7 +5,7 @@ import {
   NavigationArrow, Phone, PlusCircle, Pulse, Question, ShareNetwork, ShieldCheck, SignOut, Siren, Sun,
   Tree, User, Users, UsersThree, Warning, WarningOctagon, Waves, X, Camera, Target, UserCircle,
   Drop, ForkKnife, Flashlight, Radio, FirstAidKit, IdentificationCard, TShirt, Money, Timer, Heartbeat, ArrowsClockwise,
-  WhatsappLogo, ChatCircleDots, Cookie, Crosshair, CaretDown,
+  WhatsappLogo, ChatCircleDots, Cookie, Crosshair, CaretDown, DownloadSimple, PencilSimple, Trash, Prohibit, UserCheck,
 } from '@phosphor-icons/react'
 
 // Íconos duotono (Phosphor). Los nombres en español son los que usa toda la app.
@@ -23,6 +23,7 @@ const ICONOS = {
   objetivo: Target, perfil: UserCircle,
   agua: Drop, comida: ForkKnife, linterna: Flashlight, radio: Radio, botiquin: FirstAidKit, documentos: IdentificationCard,
   ropa: TShirt, efectivo: Money, antes: Timer, durante: Heartbeat, despues: ArrowsClockwise,
+  descargar: DownloadSimple, editar: PencilSimple, eliminar: Trash, bloquear: Prohibit, activar: UserCheck,
 }
 
 /**

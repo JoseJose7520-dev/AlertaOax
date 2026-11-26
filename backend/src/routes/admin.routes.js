@@ -5,7 +5,7 @@ import { verificarToken } from '../middlewares/verificarToken.js'
 import { verificarRol } from '../middlewares/verificarRol.js'
 import { env } from '../config/env.js'
 import { enviarResultadoAutoridad } from '../utils/correo.js'
-import { listarAutoridades, listarUsuarios, obtenerMetricas, validarAutoridad } from '../models/admin.model.js'
+import { cambiarActivo, listarAutoridades, listarUsuarios, obtenerMetricas, validarAutoridad } from '../models/admin.model.js'
 
 const router = Router()
 router.use(verificarToken, verificarRol('administrador'))
@@ -20,6 +20,23 @@ router.get('/users', asyncHandler(async (req, res) => {
   const buscar = typeof req.query.buscar === 'string' ? req.query.buscar.trim().slice(0, 80) : ''
   const pagina = Math.max(1, Number.parseInt(req.query.pagina, 10) || 1)
   res.json(await listarUsuarios({ rol: rol || null, buscar, pagina }))
+}))
+
+// PATCH /api/admin/users/:id/activo   Body: { activo: true | false }
+// Una cuenta desactivada no puede entrar y sus sesiones abiertas dejan de servir. Se puede volver a activar.
+router.patch('/users/:id/activo', asyncHandler(async (req, res) => {
+  const id = Number(req.params.id)
+  if (!Number.isInteger(id) || id <= 0) throw new ErrorHttp(400, 'Identificador inválido.')
+  if (typeof req.body?.activo !== 'boolean') throw new ErrorHttp(400, 'Indica si la cuenta queda activa (true) o desactivada (false).')
+  if (id === req.usuario.id) throw new ErrorHttp(400, 'No puedes desactivar tu propia cuenta.')
+  const usuario = await cambiarActivo(id, req.body.activo)
+  if (!usuario) throw new ErrorHttp(404, 'La cuenta no existe.')
+  res.json({
+    usuario,
+    mensaje: usuario.activo
+      ? `La cuenta de ${usuario.nombre} está activa de nuevo.`
+      : `La cuenta de ${usuario.nombre} quedó desactivada y se cerraron sus sesiones.`,
+  })
 }))
 
 // GET /api/admin/metrics

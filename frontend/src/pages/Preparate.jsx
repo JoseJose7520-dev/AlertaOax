@@ -6,6 +6,7 @@ import { GUIAS, MOCHILA } from '../utils/guias.js'
 import { fechaCorta } from '../utils/catalogos.js'
 import Aviso from '../components/Aviso.jsx'
 import Cargando from '../components/Cargando.jsx'
+import Confirmar from '../components/Confirmar.jsx'
 import Icono from '../components/Icono.jsx'
 
 const PESTANAS = [
@@ -102,7 +103,7 @@ function Mochila({ marcados, alternar, guardando }) {
 
 /** Texto del plan para mandarlo a la familia (WhatsApp, SMS, correo…). */
 function textoPlan(plan) {
-  const lineas = ['🏠 Nuestro plan familiar de emergencia (AlertaOax)']
+  const lineas = [`🏠 Plan familiar de emergencia «${plan.nombre}» (AlertaOax)`]
   if (plan.punto_reunion) lineas.push(`📍 Punto de reunión: ${plan.punto_reunion}`)
   if (plan.albergue) lineas.push(`🏫 Albergue al que iremos: ${plan.albergue}`)
   if (plan.contacto_externo) lineas.push(`📞 Contacto fuera de la región: ${plan.contacto_externo}`)
@@ -111,94 +112,229 @@ function textoPlan(plan) {
   return lineas.join('\n')
 }
 
-function PlanFamiliar({ plan, albergues, guardar }) {
-  const [form, setForm] = useState({
-    puntoReunion: plan?.punto_reunion ?? '',
-    albergueId: plan?.albergue_id ?? '',
-    contactoExterno: plan?.contacto_externo ?? '',
-    necesidades: plan?.necesidades ?? '',
-  })
-  const [estado, setEstado] = useState({ tipo: 'info', texto: '' })
+const VACIO = { nombre: '', puntoReunion: '', albergueId: '', contactoExterno: '', necesidades: '' }
+const aFormulario = (p) => p
+  ? { nombre: p.nombre ?? '', puntoReunion: p.punto_reunion ?? '', albergueId: p.albergue_id ?? '', contactoExterno: p.contacto_externo ?? '', necesidades: p.necesidades ?? '' }
+  : VACIO
+
+/** Crear o editar un plan. Lo mínimo para que sirva: nombre, dónde se reúnen y a quién llamar. */
+function FormularioPlan({ plan, albergues, alGuardar, alCancelar }) {
+  const [form, setForm] = useState(aFormulario(plan))
+  const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [intento, setIntento] = useState(false)
-  const cambiar = (c) => (e) => { setForm((f) => ({ ...f, [c]: e.target.value })); setEstado({ tipo: 'info', texto: '' }) }
+  const cambiar = (c) => (e) => { setForm((f) => ({ ...f, [c]: e.target.value })); setError('') }
 
-  // Lo mínimo para que el plan sirva: dónde se reúnen y a quién llamar (revisión del Equipo 1, punto 3)
   const errores = {}
+  if (form.nombre.trim().length < 2) errores.nombre = 'Ponle un nombre, por ejemplo «Casa» o «Trabajo de mamá».'
   if (form.puntoReunion.trim().length < 5) errores.puntoReunion = 'Escribe dónde se reunirán (al menos 5 caracteres).'
   if (form.contactoExterno.trim().length < 5) errores.contactoExterno = 'Escribe el nombre y teléfono de un contacto fuera de la región.'
   else if (!/\d{7,}/.test(form.contactoExterno.replace(/[\s-]/g, ''))) errores.contactoExterno = 'Incluye el teléfono del contacto.'
   const ver = (c) => (intento ? errores[c] : undefined)
+  const borde = (c) => (ver(c) ? 'border-riesgo-critico' : '')
 
   async function enviar(e) {
     e.preventDefault()
     setIntento(true)
-    if (Object.keys(errores).length) return setEstado({ tipo: 'error', texto: 'Completa los datos marcados para guardar tu plan.' })
+    if (Object.keys(errores).length) return setError('Completa los datos marcados para guardar el plan.')
     setEnviando(true)
     try {
-      await guardar(form)
-      setIntento(false)
-      setEstado({ tipo: 'exito', texto: 'Plan guardado. Ahora compártelo con tu familia.' })
+      const cuerpo = { ...form, albergueId: form.albergueId || null }
+      const r = plan ? await api.put(`/plan/planes/${plan.id}`, cuerpo) : await api.post('/plan/planes', cuerpo)
+      alGuardar(r.plan, r.mensaje)
     } catch (err) {
-      setEstado({ tipo: 'error', texto: err.message })
-    } finally {
+      setError(err.message)
       setEnviando(false)
     }
   }
 
-  async function compartir() {
+  return (
+    <form onSubmit={enviar} className="tarjeta flex flex-col gap-4 p-4 sm:p-5" noValidate>
+      <div className="flex items-center gap-2">
+        <Icono nombre={plan ? 'editar' : 'mas'} tam={22} className="text-acento dark:text-acento-fuerte" />
+        <h2 className="text-subtitulo font-bold">{plan ? `Editar «${plan.nombre}»` : 'Nuevo plan familiar'}</h2>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="etiqueta sm:col-span-2">
+          Nombre del plan *
+          <input className={`campo font-normal ${borde('nombre')}`} maxLength={60} placeholder="Ej. Casa, Trabajo de mamá, Casa de los abuelos" value={form.nombre} onChange={cambiar('nombre')} autoFocus />
+          {ver('nombre') && <span className="text-nota font-semibold text-riesgo-critico-texto">{ver('nombre')}</span>}
+        </label>
+        <label className="etiqueta">
+          Punto de reunión *
+          <input className={`campo font-normal ${borde('puntoReunion')}`} maxLength={250} placeholder="Ej. Parque central, frente a la iglesia" value={form.puntoReunion} onChange={cambiar('puntoReunion')} />
+          {ver('puntoReunion') && <span className="text-nota font-semibold text-riesgo-critico-texto">{ver('puntoReunion')}</span>}
+        </label>
+        <label className="etiqueta">
+          Albergue al que iremos
+          <select className="campo font-normal" value={form.albergueId} onChange={cambiar('albergueId')}>
+            <option value="">Sin elegir</option>
+            {albergues.map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
+          </select>
+        </label>
+        <label className="etiqueta">
+          Contacto foráneo (fuera de la región) *
+          <input className={`campo font-normal ${borde('contactoExterno')}`} maxLength={160} placeholder="Ej. Tía Rosa 951 123 4567" value={form.contactoExterno} onChange={cambiar('contactoExterno')} />
+          {ver('contactoExterno') && <span className="text-nota font-semibold text-riesgo-critico-texto">{ver('contactoExterno')}</span>}
+        </label>
+        <label className="etiqueta sm:col-span-2">
+          ¿Quién necesita ayuda especial?
+          <textarea className="campo min-h-24 py-3 font-normal" maxLength={500} placeholder="Ej. Abuela con bastón, bebé de 1 año" value={form.necesidades} onChange={cambiar('necesidades')} />
+        </label>
+      </div>
+      <p className="text-nota text-tenue">* Obligatorio</p>
+      <Aviso tipo="error">{error}</Aviso>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <button type="submit" className="btn-principal" disabled={enviando}>{enviando ? 'Guardando…' : plan ? 'Guardar cambios' : 'Crear plan'}</button>
+        <button type="button" className="btn-neutro min-h-13" onClick={alCancelar} disabled={enviando}>Cancelar</button>
+      </div>
+    </form>
+  )
+}
+
+function Dato({ icono, titulo, children }) {
+  return (
+    <div className="flex items-start gap-3">
+      <span className="icono-caja size-10 shrink-0 bg-acento-claro text-acento dark:text-acento-fuerte"><Icono nombre={icono} tam={20} /></span>
+      <div className="min-w-0">
+        <p className="rotulo text-tenue">{titulo}</p>
+        <p className="break-words font-semibold">{children}</p>
+      </div>
+    </div>
+  )
+}
+
+/** Tarjeta de un plan guardado: se puede ver completo, editar, compartir y eliminar. */
+function TarjetaPlan({ plan, abierto, alAlternar, alEditar, alEliminar, alCompartir }) {
+  return (
+    <article className="tarjeta flex flex-col gap-3 p-4 sm:p-5">
+      <button type="button" onClick={alAlternar} aria-expanded={abierto} className="flex items-start justify-between gap-3 text-left">
+        <span className="flex min-w-0 items-start gap-3">
+          <span className="icono-caja size-11 shrink-0 bg-acento-claro text-acento dark:text-acento-fuerte"><Icono nombre="comunidad" tam={24} /></span>
+          <span className="min-w-0">
+            <span className="block text-subtitulo font-bold">{plan.nombre}</span>
+            <span className="block truncate text-nota text-tenue">📍 {plan.punto_reunion}</span>
+          </span>
+        </span>
+        <span className="flex shrink-0 items-center gap-1 text-nota font-bold text-acento dark:text-acento-fuerte">
+          {abierto ? 'Ocultar' : 'Ver plan'} <Icono nombre="abajo" tam={18} peso="bold" className={abierto ? 'rotate-180' : ''} />
+        </span>
+      </button>
+      {abierto && (
+        <div className="flex flex-col gap-3 border-t border-linea pt-3">
+          <Dato icono="ubicacion" titulo="Punto de reunión">{plan.punto_reunion}</Dato>
+          <Dato icono="casa" titulo="Albergue al que iremos">{plan.albergue ?? 'Sin elegir'}</Dato>
+          <Dato icono="telefono" titulo="Contacto fuera de la región">{plan.contacto_externo}</Dato>
+          <Dato icono="salvavidas" titulo="Quién necesita ayuda especial">{plan.necesidades || 'Nadie anotado'}</Dato>
+          <p className="text-nota text-tenue">Última actualización: {fechaCorta(plan.actualizado_en)}</p>
+        </div>
+      )}
+      <div className="grid grid-cols-2 gap-2 sm:flex">
+        <button type="button" onClick={alCompartir} className="btn-principal col-span-2 min-h-11 text-texto sm:flex-1"><Icono nombre="compartir" tam={20} /> Compartir</button>
+        <button type="button" onClick={alEditar} className="btn-neutro min-h-11 text-texto" aria-label={`Editar el plan ${plan.nombre}`}><Icono nombre="editar" tam={20} /> Editar</button>
+        <button type="button" onClick={alEliminar} className="btn-neutro min-h-11 text-texto text-riesgo-critico-texto" aria-label={`Eliminar el plan ${plan.nombre}`}><Icono nombre="eliminar" tam={20} /> Eliminar</button>
+      </div>
+    </article>
+  )
+}
+
+/** Pestaña «Plan familiar»: lista de planes de la cuenta (AO-431). */
+function PlanesFamiliares({ albergues }) {
+  const planesApi = useApi('/plan/planes')
+  const planes = planesApi.datos?.planes ?? []
+  const maximo = planesApi.datos?.maximo ?? 10
+  // null = lista; { plan: null } = nuevo; { plan } = editar
+  const [edicion, setEdicion] = useState(null)
+  const [abiertoId, setAbiertoId] = useState(null)
+  const [porEliminar, setPorEliminar] = useState(null)
+  const [eliminando, setEliminando] = useState(false)
+  const [aviso, setAviso] = useState({ tipo: 'info', texto: '' })
+
+  async function compartir(plan) {
     const texto = textoPlan(plan)
     try {
-      if (navigator.share) await navigator.share({ title: 'Plan familiar de emergencia', text: texto })
+      if (navigator.share) await navigator.share({ title: `Plan familiar: ${plan.nombre}`, text: texto })
       else {
         await navigator.clipboard.writeText(texto)
-        setEstado({ tipo: 'exito', texto: 'Plan copiado. Pégalo en WhatsApp o en un mensaje para tu familia.' })
+        setAviso({ tipo: 'exito', texto: 'Plan copiado. Pégalo en WhatsApp o en un mensaje para tu familia.' })
       }
     } catch { /* la persona canceló */ }
   }
 
-  const cambiosSinGuardar = plan && (
-    form.puntoReunion !== (plan.punto_reunion ?? '') || String(form.albergueId) !== String(plan.albergue_id ?? '') ||
-    form.contactoExterno !== (plan.contacto_externo ?? '') || form.necesidades !== (plan.necesidades ?? ''))
-  const puedeCompartir = plan?.punto_reunion && !cambiosSinGuardar
+  async function eliminar() {
+    setEliminando(true)
+    try {
+      const r = await api.borrar(`/plan/planes/${porEliminar.id}`)
+      setAviso({ tipo: 'exito', texto: `${r.mensaje} («${porEliminar.nombre}»)` })
+      setPorEliminar(null)
+      planesApi.recargar()
+    } catch (err) {
+      setAviso({ tipo: 'error', texto: err.message })
+      setPorEliminar(null)
+    } finally {
+      setEliminando(false)
+    }
+  }
+
+  if (edicion) {
+    return (
+      <FormularioPlan
+        plan={edicion.plan}
+        albergues={albergues}
+        alCancelar={() => setEdicion(null)}
+        alGuardar={(plan, mensaje) => { setEdicion(null); setAbiertoId(plan.id); setAviso({ tipo: 'exito', texto: mensaje }); planesApi.recargar() }}
+      />
+    )
+  }
 
   return (
-    <form onSubmit={enviar} className="tarjeta flex flex-col gap-4 p-4 sm:p-5" noValidate>
-      <p className="flex items-center gap-2 text-tinta-suave"><Icono nombre="comunidad" tam={22} className="text-acento dark:text-acento-fuerte" /> Acuerden en familia qué hacer. Se guarda en tu cuenta y lo puedes compartir.</p>
-      <div className="grid gap-4 sm:grid-cols-2">
-      <label className="etiqueta">
-        Punto de reunión *
-        <input className={`campo font-normal ${ver('puntoReunion') ? 'border-riesgo-critico' : ''}`} maxLength={250} placeholder="Ej. Parque central, frente a la iglesia" value={form.puntoReunion} onChange={cambiar('puntoReunion')} />
-        {ver('puntoReunion') && <span className="text-nota font-semibold text-riesgo-critico-texto">{ver('puntoReunion')}</span>}
-      </label>
-      <label className="etiqueta">
-        Albergue al que iremos
-        <select className="campo font-normal" value={form.albergueId} onChange={cambiar('albergueId')}>
-          <option value="">Sin elegir</option>
-          {albergues.map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
-        </select>
-      </label>
-      <label className="etiqueta">
-        Contacto foráneo (fuera de la región) *
-        <input className={`campo font-normal ${ver('contactoExterno') ? 'border-riesgo-critico' : ''}`} maxLength={160} placeholder="Ej. Tía Rosa 951 123 4567" value={form.contactoExterno} onChange={cambiar('contactoExterno')} />
-        {ver('contactoExterno') && <span className="text-nota font-semibold text-riesgo-critico-texto">{ver('contactoExterno')}</span>}
-      </label>
-      <label className="etiqueta sm:col-span-2">
-        ¿Quién necesita ayuda especial?
-        <textarea className="campo min-h-24 py-3 font-normal" maxLength={500} placeholder="Ej. Abuela con bastón, bebé de 1 año" value={form.necesidades} onChange={cambiar('necesidades')} />
-      </label>
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="flex items-center gap-2 text-tinta-suave">
+          <Icono nombre="comunidad" tam={22} className="text-acento dark:text-acento-fuerte" />
+          Acuerden en familia qué hacer. Puedes tener un plan por cada lugar donde están (casa, trabajo, escuela).
+        </p>
+        {planes.length > 0 && (
+          <button type="button" className="btn-principal min-h-11 text-texto" disabled={planes.length >= maximo}
+            title={planes.length >= maximo ? `Puedes guardar hasta ${maximo} planes` : undefined}
+            onClick={() => { setAviso({ tipo: 'info', texto: '' }); setEdicion({ plan: null }) }}>
+            <Icono nombre="mas" tam={20} /> Nuevo plan
+          </button>
+        )}
       </div>
-      <p className="text-nota text-tenue">* Obligatorio</p>
-      <Aviso tipo={estado.tipo}>{estado.texto}</Aviso>
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <button type="submit" className="btn-principal" disabled={enviando}>{enviando ? 'Guardando…' : 'Guardar plan'}</button>
-        <button type="button" onClick={compartir} className="btn-neutro min-h-13" disabled={!puedeCompartir}
-          title={puedeCompartir ? 'Enviar el plan por WhatsApp, mensaje o correo' : 'Guarda tu plan para poder compartirlo'}>
-          <Icono nombre="compartir" tam={20} /> Compartir con mi familia
-        </button>
-      </div>
-      {plan?.actualizado_en && <p className="text-nota text-tenue">Última actualización: {fechaCorta(plan.actualizado_en)}</p>}
-    </form>
+      <Aviso tipo={aviso.tipo}>{aviso.texto}</Aviso>
+      <Aviso tipo="error">{planesApi.error}</Aviso>
+      {planesApi.cargando && !planesApi.datos && <Cargando />}
+      {planesApi.datos && planes.length === 0 && (
+        <div className="tarjeta flex flex-col items-center gap-3 p-6 text-center">
+          <span className="icono-caja size-14 bg-acento-claro text-acento dark:text-acento-fuerte"><Icono nombre="comunidad" tam={30} /></span>
+          <p className="text-subtitulo font-bold">Aún no tienes un plan familiar</p>
+          <p className="text-tenue">Anota dónde se reunirán y a quién llamar si se separan. Toma 2 minutos.</p>
+          <button type="button" className="btn-principal" onClick={() => setEdicion({ plan: null })}><Icono nombre="mas" tam={20} /> Crear mi primer plan</button>
+        </div>
+      )}
+      {planes.map((p) => (
+        <TarjetaPlan key={p.id} plan={p} abierto={abiertoId === p.id}
+          alAlternar={() => setAbiertoId((id) => (id === p.id ? null : p.id))}
+          alEditar={() => { setAviso({ tipo: 'info', texto: '' }); setEdicion({ plan: p }) }}
+          alEliminar={() => setPorEliminar(p)}
+          alCompartir={() => compartir(p)} />
+      ))}
+      {planes.length > 0 && <p className="text-nota text-tenue">{planes.length} de {maximo} planes guardados en tu cuenta.</p>}
+      <Confirmar
+        abierto={Boolean(porEliminar)}
+        titulo={`¿Eliminar el plan «${porEliminar?.nombre ?? ''}»?`}
+        tono="peligro"
+        icono="eliminar"
+        textoConfirmar="Sí, eliminar"
+        textoCancelar="Cancelar"
+        enviando={eliminando}
+        onConfirmar={eliminar}
+        onCancelar={() => setPorEliminar(null)}
+      >
+        <p>Se borrará de tu cuenta y no se puede deshacer. Si ya lo compartiste con tu familia, el mensaje que les mandaste no cambia.</p>
+      </Confirmar>
+    </div>
   )
 }
 
@@ -215,33 +351,19 @@ export default function Preparate() {
   const plan = planApi.datos?.plan ?? null
   const mochila = mochilaLocal ?? plan?.mochila ?? []
 
-  // La mochila y el plan se guardan juntos en /api/plan
-  const datosPlan = (extra) => ({
-    puntoReunion: plan?.punto_reunion ?? null,
-    albergueId: plan?.albergue_id ?? null,
-    contactoExterno: plan?.contacto_externo ?? null,
-    necesidades: plan?.necesidades ?? null,
-    mochila,
-    ...extra,
-  })
-
+  // La mochila se guarda sola en /api/plan; los planes familiares van aparte en /api/plan/planes
   async function alternar(id) {
     const nueva = mochila.includes(id) ? mochila.filter((x) => x !== id) : [...mochila, id]
     setMochila(nueva)
     setGuardandoMochila(true)
     setError('')
     try {
-      await api.put('/plan', datosPlan({ mochila: nueva }))
+      await api.put('/plan', { mochila: nueva })
     } catch (err) {
       setError(`No se guardó el cambio: ${err.message}`)
     } finally {
       setGuardandoMochila(false)
     }
-  }
-
-  async function guardarPlan(form) {
-    await api.put('/plan', datosPlan({ ...form, albergueId: form.albergueId || null, seccion: 'plan' }))
-    planApi.recargar()
   }
 
   return (
@@ -271,7 +393,7 @@ export default function Preparate() {
           {pestana === 'guias' && <Guias />}
           {pestana === 'mochila' && <Mochila marcados={mochila} alternar={alternar} guardando={guardandoMochila} />}
           {pestana === 'plan' && (
-            <PlanFamiliar plan={plan} albergues={alberguesApi.datos?.albergues ?? []} guardar={guardarPlan} />
+            <PlanesFamiliares albergues={alberguesApi.datos?.albergues ?? []} />
           )}
         </div>
       )}

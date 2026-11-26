@@ -57,4 +57,32 @@ export const api = {
   post: (ruta, cuerpo = {}) => peticion('POST', ruta, cuerpo),
   put: (ruta, cuerpo = {}) => peticion('PUT', ruta, cuerpo),
   patch: (ruta, cuerpo = {}) => peticion('PATCH', ruta, cuerpo),
+  borrar: (ruta, cuerpo) => peticion('DELETE', ruta, cuerpo),
+}
+
+/**
+ * Descarga un archivo de la API (por ejemplo el CSV de reportes) con el token de la sesión.
+ * Un enlace normal no sirve porque la ruta pide el encabezado Authorization.
+ */
+export async function descargarArchivo(ruta, nombreArchivo) {
+  const token = sesion.leer()
+  let respuesta
+  try {
+    respuesta = await fetch(BASE + ruta, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+  } catch {
+    throw new ErrorApi(0, 'No hay conexión con el servidor. Revisa tu internet e inténtalo de nuevo.')
+  }
+  if (!respuesta.ok) {
+    const datos = await respuesta.json().catch(() => ({}))
+    if (respuesta.status === 401 && token) alExpirar()
+    throw new ErrorApi(respuesta.status, datos.mensaje || 'No se pudo descargar el archivo.', datos)
+  }
+  const url = URL.createObjectURL(await respuesta.blob())
+  const enlace = document.createElement('a')
+  enlace.href = url
+  enlace.download = nombreArchivo
+  document.body.appendChild(enlace)
+  enlace.click()
+  enlace.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
 }

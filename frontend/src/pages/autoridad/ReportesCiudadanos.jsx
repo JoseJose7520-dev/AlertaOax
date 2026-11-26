@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useApi } from '../../hooks/useApi.js'
-import { api } from '../../services/api.js'
+import { api, descargarArchivo } from '../../services/api.js'
 import { ESTADOS_REPORTE, ICONO_TIPO, TIPOS_REPORTE, fechaCorta } from '../../utils/catalogos.js'
 import { enlaceRuta } from '../../utils/geo.js'
 import Aviso from '../../components/Aviso.jsx'
@@ -84,13 +84,35 @@ function Reporte({ reporte, alActualizar }) {
 export default function ReportesCiudadanos() {
   const [filtro, setFiltro] = useState('')
   const { datos, cargando, error, recargar } = useApi(`/reports${filtro ? `?estado=${filtro}` : ''}`)
+  const [descargando, setDescargando] = useState(false)
+  const [errorCsv, setErrorCsv] = useState('')
+
+  // AO-423: Protección Civil descarga los reportes (con el mismo filtro de estado) para darles seguimiento en Excel
+  async function descargarCsv() {
+    setDescargando(true); setErrorCsv('')
+    try {
+      const hoy = new Date().toLocaleDateString('en-CA') // AAAA-MM-DD
+      await descargarArchivo(`/reports/export${filtro ? `?estado=${filtro}` : ''}`, `reportes-alertaoax-${hoy}${filtro ? `-${filtro}` : ''}.csv`)
+    } catch (err) {
+      setErrorCsv(err.message)
+    } finally {
+      setDescargando(false)
+    }
+  }
 
   return (
     <section className="flex max-w-3xl flex-col gap-4">
       <Encabezado rotulo="Panel de autoridad" titulo="Reportes ciudadanos" icono="reporte">
         Incidentes que reportó la población de tu región. Deja una nota para que sepan qué se está haciendo.
       </Encabezado>
-      <Filtros etiqueta="Filtrar por estado" valor={filtro} onCambio={setFiltro} opciones={FILTROS.map((f) => [f.valor, f.texto])} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Filtros etiqueta="Filtrar por estado" valor={filtro} onCambio={setFiltro} opciones={FILTROS.map((f) => [f.valor, f.texto])} />
+        <button type="button" onClick={descargarCsv} disabled={descargando || !datos?.reportes.length} className="btn-neutro min-h-11 text-texto"
+          title={datos?.reportes.length ? 'Descarga los reportes de este filtro para abrirlos en Excel' : 'No hay reportes para descargar'}>
+          <Icono nombre="descargar" tam={20} /> {descargando ? 'Descargando…' : 'Descargar CSV'}
+        </button>
+      </div>
+      <Aviso tipo="error">{errorCsv}</Aviso>
       {cargando && <Cargando />}
       <Aviso tipo="error">{error}</Aviso>
       {datos?.reportes.length === 0 && <p className="text-tenue">No hay reportes con este filtro.</p>}
