@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext.jsx'
 import { useApi } from '../../hooks/useApi.js'
 import { api } from '../../services/api.js'
@@ -73,7 +74,9 @@ function BotonActivo({ u, esYo, alCambiar }) {
 export default function Usuarios() {
   const { usuario: yo } = useAuth()
   const [exito, setExito] = useState('')
-  const [rol, setRol] = useState('')
+  // ?rol=ciudadano (desde la tarjeta «Ciudadanos registrados» del resumen)
+  const [url] = useSearchParams()
+  const [rol, setRol] = useState(() => (['ciudadano', 'autoridad', 'administrador'].includes(url.get('rol')) ? url.get('rol') : ''))
   const [texto, setTexto] = useState('')
   const [buscar, setBuscar] = useState('')
   const [pagina, setPagina] = useState(1)

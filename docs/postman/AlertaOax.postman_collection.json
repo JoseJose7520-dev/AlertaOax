@@ -2388,6 +2388,159 @@
           ]
         },
         {
+          "name": "Marcar el reporte como atendido",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/{{reporteId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports",
+                "{{reporteId}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"atendido\",\n  \"nota\": \"Se retiró el árbol.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAutoridad}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Quedó atendido\", () => pm.expect(pm.response.json().reporte.estado).to.eql(\"atendido\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Regresar el reporte a «En atención» (corregir un error)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/{{reporteId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports",
+                "{{reporteId}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"en_atencion\",\n  \"nota\": \"Lo marcamos por error; seguimos atendiendo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAutoridad}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Regresó a en atención\", () => pm.expect(pm.response.json().reporte.estado).to.eql(\"en_atencion\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reportes abiertos (recibidos y en atención)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports?estado=abiertos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "abiertos"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAutoridad}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Ninguno está atendido\", () => pm.expect(pm.response.json().reportes.every((r) => r.estado !== \"atendido\")).to.eql(true));",
+                  "pm.test(\"Incluye el reporte que regresó\", () => pm.expect(pm.response.json().reportes.map((r) => r.id)).to.include(pm.collectionVariables.get(\"reporteId\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Descargar reportes en CSV (autoridad)",
           "request": {
             "method": "GET",

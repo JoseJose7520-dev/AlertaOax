@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext.jsx'
 import { useApi } from '../../hooks/useApi.js'
 import { api } from '../../services/api.js'
@@ -73,9 +73,14 @@ export default function MisAlertas() {
     return () => clearInterval(reloj)
   }, [])
   // «Mías»: las que publicó esta cuenta. «De mi región» (autoridad) o «Todas» (administrador): las de todos.
-  const [ambito, setAmbito] = useState('mias')
+  // Desde el resumen del administrador llegan ?ambito=todas&filtro=vigentes&tipo=sismo&region=Costa
+  const [params, setParams] = useSearchParams()
+  const [ambito, setAmbito] = useState(() => (params.get('ambito') === 'todas' ? 'todas' : 'mias'))
   const [aviso, setAviso] = useState({ tipo: 'info', texto: '' })
-  const [filtro, setFiltro] = useState('vigentes')
+  const [filtro, setFiltro] = useState(() => (['vigentes', 'terminadas', 'todas'].includes(params.get('filtro')) ? params.get('filtro') : 'vigentes'))
+  const tipoUrl = params.get('tipo')
+  const regionUrl = params.get('region')
+  const quitarFiltroUrl = () => setParams({}, { replace: true })
   const [terminando, setTerminando] = useState(null)
   const [enviando, setEnviando] = useState(false)
 
@@ -93,7 +98,8 @@ export default function MisAlertas() {
   }
 
   const todas = (datos?.alertas ?? []).map((a) => ({ ...a, vigente: a.vigente && new Date(a.vigente_hasta).getTime() > ahora }))
-  const alertas = ambito === 'mias' ? todas.filter((a) => a.es_mia) : todas
+  const alertas = (ambito === 'mias' ? todas.filter((a) => a.es_mia) : todas)
+    .filter((a) => (!tipoUrl || a.tipo === tipoUrl) && (!regionUrl || a.region === regionUrl))
   const vigentes = alertas.filter((a) => a.vigente)
   const lista = filtro === 'vigentes' ? vigentes : filtro === 'terminadas' ? alertas.filter((a) => !a.vigente) : alertas
   const notificados = alertas.reduce((s, a) => s + Number(a.notificados || 0), 0)
@@ -117,6 +123,17 @@ export default function MisAlertas() {
       )}
       <Filtros etiqueta="Filtrar alertas" valor={filtro} onCambio={setFiltro}
         opciones={[['vigentes', `Vigentes (${vigentes.length})`], ['terminadas', 'Terminadas'], ['todas', 'Todas']]} />
+      {(tipoUrl || regionUrl) && (
+        <p className="flex flex-wrap items-center gap-2 text-nota">
+          <span className="text-tenue">Mostrando solo:</span>
+          <span className="rounded-full bg-acento-claro px-3 py-1 font-bold text-acento dark:text-acento-fuerte">
+            {[tipoUrl && (TIPOS_ALERTA[tipoUrl] ?? tipoUrl), regionUrl].filter(Boolean).join(' · ')}
+          </span>
+          <button type="button" onClick={quitarFiltroUrl} className="inline-flex min-h-10 items-center gap-1 rounded-xl px-2 font-bold text-tenue hover:bg-hundido hover:text-tinta">
+            <Icono nombre="cerrar" tam={16} /> Quitar filtro
+          </button>
+        </p>
+      )}
       <Aviso tipo={aviso.tipo}>{aviso.texto}</Aviso>
       {cargando && <Cargando />}
       <Aviso tipo="error">{error}</Aviso>

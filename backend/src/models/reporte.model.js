@@ -32,7 +32,8 @@ export async function listarParaAutoridad(regionId = null, estado = null) {
   const params = []
   const condiciones = []
   if (regionId) { params.push(regionId); condiciones.push(`rp.region_id = $${params.length}`) }
-  if (estado) { params.push(estado); condiciones.push(`rp.estado = $${params.length}`) }
+  if (estado === 'abiertos') condiciones.push("rp.estado <> 'atendido'") // recibidos y en atención
+  else if (estado) { params.push(estado); condiciones.push(`rp.estado = $${params.length}`) }
   const filtro = condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : ''
   const { rows } = await consulta(
     `${SELECT_REPORTE} ${filtro}
@@ -58,7 +59,8 @@ export async function listarParaExportar(regionId = null, estado = null) {
   const params = []
   const condiciones = []
   if (regionId) { params.push(regionId); condiciones.push(`rp.region_id = $${params.length}`) }
-  if (estado) { params.push(estado); condiciones.push(`rp.estado = $${params.length}`) }
+  if (estado === 'abiertos') condiciones.push("rp.estado <> 'atendido'") // recibidos y en atención
+  else if (estado) { params.push(estado); condiciones.push(`rp.estado = $${params.length}`) }
   const filtro = condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : ''
   const { rows } = await consulta(`${SELECT_REPORTE} ${filtro} ORDER BY rp.creado_en DESC`, params)
   return rows

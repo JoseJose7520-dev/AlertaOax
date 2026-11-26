@@ -90,9 +90,9 @@ Todas las respuestas de error tienen la forma `{ "mensaje": "..." }`.
 | GET | `/api/risk-zones?region=Costa` | Con token | Zonas de riesgo (círculo: centro y radio) |
 | POST | `/api/reports` | Ciudadano | Reporte de incidencia (estado inicial `recibido`) |
 | GET | `/api/reports/mine` | Ciudadano | Reportes propios con su estado |
-| GET | `/api/reports?estado=recibido` | Autoridad, admin | Reportes de la región de la autoridad |
+| GET | `/api/reports?estado=recibido` | Autoridad, admin | Reportes de la región de la autoridad (`estado=abiertos`: recibidos y en atención) |
 | GET | `/api/reports/export?estado=` | Autoridad, admin | Descarga en CSV (UTF-8, abre en Excel) con el mismo filtro; la autoridad solo su región |
-| PATCH | `/api/reports/:id/estado` | Autoridad de la región, admin | Cambia a `en_atencion` o `atendido`, con nota opcional |
+| PATCH | `/api/reports/:id/estado` | Autoridad de la región, admin | Cambia a `recibido`, `en_atencion` o `atendido` (también hacia atrás, para corregir), con nota opcional |
 | GET / PUT | `/api/plan` | Ciudadano | Mochila de emergencia (`{ mochila: [...] }`) |
 | GET / POST | `/api/plan/planes` | Ciudadano | Planes familiares de la cuenta (hasta 10): `{ nombre, puntoReunion, contactoExterno, albergueId?, necesidades? }` |
 | GET / PUT / DELETE | `/api/plan/planes/:id` | Ciudadano dueño | Ver, editar o eliminar un plan |

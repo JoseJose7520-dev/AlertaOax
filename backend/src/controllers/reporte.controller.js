@@ -51,7 +51,8 @@ export async function mios(req, res) {
 /** Filtro común de la lista y la descarga: estado opcional y, para la autoridad, solo su región. */
 async function filtroAutoridad(req) {
   const estado = texto(req.query.estado)
-  if (estado && !ESTADOS.includes(estado)) throw new ErrorHttp(400, 'Estado inválido.')
+  // «abiertos» = recibidos + en atención (la tarjeta «Reportes abiertos» del resumen del administrador)
+  if (estado && estado !== 'abiertos' && !ESTADOS.includes(estado)) throw new ErrorHttp(400, 'Estado inválido.')
   let regionId = null
   if (req.usuario.rol === 'autoridad') {
     const usuario = await buscarPorId(req.usuario.id)
@@ -60,7 +61,7 @@ async function filtroAutoridad(req) {
   return { regionId, estado: estado || null }
 }
 
-/** GET /api/reports?estado=recibido   (autoridad: los de su región; administrador: todos) */
+/** GET /api/reports?estado=recibido|en_atencion|atendido|abiertos   (autoridad: los de su región; administrador: todos) */
 export async function paraAutoridad(req, res) {
   const { regionId, estado } = await filtroAutoridad(req)
   res.json({ reportes: await listarParaAutoridad(regionId, estado) })
