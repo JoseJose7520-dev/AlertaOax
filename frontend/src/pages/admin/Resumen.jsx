@@ -19,8 +19,8 @@ function Cifra({ etiqueta, valor, icono, color, destacada = false, a }) {
       <span className={`text-nota font-semibold ${destacada ? 'text-acento dark:text-acento-fuerte' : 'text-tenue'}`}>{etiqueta}</span>
     </>
   )
-  const clases = `tarjeta flex flex-col gap-2.5 p-4.5 text-tinta no-underline transition ${destacada ? 'border-acento/50 ring-1 ring-acento/30 hover:border-acento' : ''}`
-  return a ? <Link to={a} className={clases}>{contenido}</Link> : <div className={clases}>{contenido}</div>
+  const clases = `tarjeta flex flex-col gap-2.5 p-4.5 text-tinta no-underline transition ${destacada ? 'border-acento/50 ring-1 ring-acento/30 hover:border-acento' : a ? 'hover:-translate-y-0.5 hover:border-acento/60' : ''}`
+  return a ? <Link to={a} className={clases} aria-label={`${etiqueta}: ${valor}. Ver detalle`}>{contenido}</Link> : <div className={clases}>{contenido}</div>
 }
 
 /** Barras horizontales accesibles: cada fila tiene el texto y el número, no solo la barra. */
@@ -31,15 +31,25 @@ function Barras({ titulo, icono, filas, color = 'bg-acento' }) {
       <h2 className="flex items-center gap-2 text-subtitulo font-bold"><Icono nombre={icono} tam={22} className="text-acento dark:text-acento-fuerte" /> {titulo}</h2>
       {filas.length === 0 && <p className="text-tenue">Sin datos todavía.</p>}
       <ul className="flex flex-col gap-2.5">
-        {filas.map((f) => (
-          <li key={f.nombre} className="grid grid-cols-[8.5rem_minmax(0,1fr)_2.25rem] items-center gap-2.5 text-texto">
-            <span className="leading-tight">{f.nombre}</span>
-            <span className="h-3 overflow-hidden rounded-full bg-hundido" aria-hidden="true">
-              <span className={`block h-full rounded-full ${f.color ?? color}`} style={{ width: `${(f.total / max) * 100}%`, backgroundImage: f.color ? undefined : 'linear-gradient(90deg,#2563EB,#0891B2)' }} />
-            </span>
-            <strong className="text-right">{f.total}</strong>
-          </li>
-        ))}
+        {filas.map((f) => {
+          const contenido = (
+            <>
+              <span className="leading-tight">{f.nombre}</span>
+              <span className="h-3 overflow-hidden rounded-full bg-hundido" aria-hidden="true">
+                <span className={`block h-full rounded-full ${f.color ?? color}`} style={{ width: `${(f.total / max) * 100}%`, backgroundImage: f.color ? undefined : 'linear-gradient(90deg,#2563EB,#0891B2)' }} />
+              </span>
+              <strong className="text-right">{f.total}</strong>
+            </>
+          )
+          const fila = 'grid grid-cols-[8.5rem_minmax(0,1fr)_2.25rem] items-center gap-2.5 text-texto'
+          return (
+            <li key={f.nombre}>
+              {f.a && f.total > 0
+                ? <Link to={f.a} className={`${fila} -mx-2 rounded-xl px-2 py-1 text-tinta no-underline hover:bg-hundido`} aria-label={`Ver ${f.nombre}: ${f.total}`}>{contenido}</Link>
+                : <span className={`${fila} -mx-2 px-2 py-1`}>{contenido}</span>}
+            </li>
+          )
+        })}
       </ul>
     </section>
   )
@@ -88,16 +98,22 @@ export default function Resumen() {
         Indicadores en tiempo real de alertas, ciudadanos y reportes en las 8 regiones.
       </Encabezado>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3.5">
-        <Cifra etiqueta="Alertas activas" valor={m.alertas_activas} icono="sirena" color="bg-riesgo-critico-fondo text-riesgo-critico-texto" />
-        <Cifra etiqueta="Ciudadanos registrados" valor={m.ciudadanos} icono="comunidad" color="bg-acento-claro text-acento dark:text-acento-fuerte" />
-        <Cifra etiqueta="Reportes abiertos" valor={m.reportes_abiertos} icono="reporte" color="bg-riesgo-alto-fondo text-riesgo-alto-texto" />
-        <Cifra etiqueta="Notificaciones enviadas" valor={m.notificaciones_enviadas} icono="campana" color="bg-cyan-500/15 text-cian" />
+        <Cifra etiqueta="Alertas activas" valor={m.alertas_activas} icono="sirena" color="bg-riesgo-critico-fondo text-riesgo-critico-texto" a="/autoridad/alertas?ambito=todas&filtro=vigentes" />
+        <Cifra etiqueta="Ciudadanos registrados" valor={m.ciudadanos} icono="comunidad" color="bg-acento-claro text-acento dark:text-acento-fuerte" a="/admin/usuarios?rol=ciudadano" />
+        <Cifra etiqueta="Reportes abiertos" valor={m.reportes_abiertos} icono="reporte" color="bg-riesgo-alto-fondo text-riesgo-alto-texto" a="/autoridad/reportes?estado=abiertos" />
+        <Cifra etiqueta="Notificaciones enviadas" valor={m.notificaciones_enviadas} icono="campana" color="bg-cyan-500/15 text-cian" a="/autoridad/alertas?ambito=todas&filtro=todas" />
         <Cifra etiqueta="Autoridades por validar" valor={m.autoridades_pendientes} icono="escudo" color="bg-riesgo-medio-fondo text-riesgo-medio-texto" destacada a="/admin/autoridades" />
       </div>
       <div className="flex flex-wrap gap-5">
-        <Barras titulo="Alertas por tipo" icono="huracan" filas={m.alertas_por_tipo.map((f) => ({ nombre: TIPOS_ALERTA[f.tipo] ?? f.tipo, total: f.total }))} />
-        <Barras titulo="Alertas por región" icono="mapa" filas={m.alertas_por_region.map((f) => ({ nombre: f.region, total: f.total }))} />
-        <Barras titulo="Reportes por estado" icono="reporte" filas={m.reportes_por_estado.map((f) => ({ nombre: ESTADOS_REPORTE[f.estado]?.nombre ?? f.estado, total: f.total, color: COLOR_ESTADO[f.estado] }))} />
+        <Barras titulo="Alertas por tipo" icono="huracan" filas={m.alertas_por_tipo.map((f) => ({
+          nombre: TIPOS_ALERTA[f.tipo] ?? f.tipo, total: f.total, a: `/autoridad/alertas?ambito=todas&filtro=todas&tipo=${f.tipo}`,
+        }))} />
+        <Barras titulo="Alertas por región" icono="mapa" filas={m.alertas_por_region.map((f) => ({
+          nombre: f.region, total: f.total, a: `/autoridad/alertas?ambito=todas&filtro=todas&region=${encodeURIComponent(f.region)}`,
+        }))} />
+        <Barras titulo="Reportes por estado" icono="reporte" filas={m.reportes_por_estado.map((f) => ({
+          nombre: ESTADOS_REPORTE[f.estado]?.nombre ?? f.estado, total: f.total, color: COLOR_ESTADO[f.estado], a: `/autoridad/reportes?estado=${f.estado}`,
+        }))} />
       </div>
       <SolicitudesPendientes onCambio={recargar} />
       <p className="rotulo text-tenue">

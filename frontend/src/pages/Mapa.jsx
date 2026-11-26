@@ -20,9 +20,13 @@ const iconoAlbergue = (activo) =>
     html: `<span style="display:flex;width:40px;height:40px;align-items:center;justify-content:center;border-radius:12px;border:3px solid #fff;box-shadow:0 4px 12px rgba(11,17,32,.35);background:${activo ? 'linear-gradient(135deg,#2563EB,#0891B2)' : '#fff'};color:${activo ? '#fff' : '#2563EB'}"><svg width="20" height="20" viewBox="0 0 256 256" fill="currentColor"><path d="M216 120v96h-56v-56a8 8 0 0 0-8-8h-48a8 8 0 0 0-8 8v56H40v-96a8 8 0 0 1 2.34-5.66l80-80a8 8 0 0 1 11.32 0l80 80A8 8 0 0 1 216 120Z" opacity=".25"/><path d="M219.31 108.68l-80-80a16 16 0 0 0-22.62 0l-80 80A15.87 15.87 0 0 0 32 120v96a8 8 0 0 0 8 8h64a8 8 0 0 0 8-8v-56h32v56a8 8 0 0 0 8 8h64a8 8 0 0 0 8-8v-96a15.87 15.87 0 0 0-4.69-11.32ZM208 208h-48v-56a8 8 0 0 0-8-8h-48a8 8 0 0 0-8 8v56H48v-88l80-80 80 80Z"/></svg></span>`,
   })
 
+// Teléfono de la Coordinación Estatal de Protección Civil y Gestión de Riesgos (CEPCyGR)
+const TEL_PROTECCION_CIVIL = '9516890799'
+
 /** Estado del albergue según lugares libres: siempre con texto, no solo color. */
 function estadoAlbergue(a) {
-  if (a.capacidad == null) return { texto: 'ALBERGUE ABIERTO', clases: 'bg-riesgo-bajo text-abisal', barra: 'bg-riesgo-bajo', borde: 'border-l-riesgo-bajo' }
+  // Refugio oficial sin cupo en vivo: solo se abre en emergencias, así que no se anuncia como «abierto»
+  if (a.capacidad == null) return { texto: 'REFUGIO TEMPORAL', clases: 'bg-acento-claro text-acento dark:text-acento-fuerte', barra: 'bg-acento', borde: 'border-l-acento' }
   if (a.libres <= 0) return { texto: 'ALBERGUE LLENO', clases: 'bg-riesgo-critico text-white', barra: 'bg-riesgo-critico', borde: 'border-l-riesgo-critico' }
   if (a.libres / a.capacidad < 0.2) return { texto: 'CASI LLENO', clases: 'bg-riesgo-alto text-abisal', barra: 'bg-riesgo-alto', borde: 'border-l-riesgo-alto' }
   return { texto: 'ALBERGUE ABIERTO', clases: 'bg-riesgo-bajo text-abisal', barra: 'bg-riesgo-bajo', borde: 'border-l-riesgo-bajo' }
@@ -77,6 +81,17 @@ function TarjetaAlbergue({ a, activo, masCercano, mostrarRegion, onElegir }) {
           <a href={`tel:${a.telefono}`} className="btn-neutro min-h-11 text-texto" aria-label={`Llamar a ${a.nombre}`}><Icono nombre="telefono" tam={20} /></a>
         )}
       </div>
+      {!a.es_ejemplo && (
+        <div className="flex items-start gap-2 rounded-xl bg-riesgo-medio-fondo p-3 text-nota text-riesgo-medio-texto" role="note">
+          <Icono nombre="alerta" tam={20} peso="fill" className="mt-0.5" />
+          <p>
+            <strong>No siempre está abierto.</strong> Protección Civil lo habilita solo durante una emergencia.
+            Antes de ir, llama al <a href="tel:911" className="font-bold underline">911</a> o a Protección Civil
+            {' '}(<a href={`tel:${TEL_PROTECCION_CIVIL}`} className="font-bold underline">951 689 0799</a>) para confirmar que esté funcionando.
+          </p>
+        </div>
+      )}
+      {a.nota && <p className="text-nota text-tinta-suave">{a.nota}</p>}
       {a.fuente && <p className="text-mini text-tenue">Fuente: {a.fuente}</p>}
       {!sinCupo && a.libres <= 0 && <p className="text-nota font-semibold text-riesgo-critico-texto">Sin lugares: busca otro albergue cercano.</p>}
     </article>
@@ -234,7 +249,7 @@ export default function Mapa() {
         <section className="flex flex-col gap-2.5" aria-label="Albergues">
           <div className="flex items-baseline justify-between">
             <h2 className="text-subtitulo font-bold">{ubicacion ? 'Albergues por cercanía' : 'Albergues'}</h2>
-            <span className="rotulo text-tenue">{lista.length} abiertos</span>
+            <span className="rotulo text-tenue">{lista.length} {lista.length === 1 ? 'registrado' : 'registrados'}</span>
           </div>
           {(albergues.cargando || zonas.cargando) && <Cargando texto="Cargando el mapa…" />}
           <Aviso tipo="error">{albergues.error || zonas.error}</Aviso>
@@ -242,6 +257,17 @@ export default function Mapa() {
             <TarjetaAlbergue key={a.id} a={a} activo={elegido?.id === a.id} masCercano={a.km !== undefined && lista[0]?.id === a.id}
               mostrarRegion={todoOaxaca} onElegir={() => setSeleccion(a.id)} />
           ))}
+          {verAlbergues && (todoOaxaca || region === 'Valles Centrales') && (
+            <div className="tarjeta flex items-start gap-3 p-4">
+              <span className="icono-caja size-10 shrink-0 bg-acento-claro text-acento dark:text-acento-fuerte"><Icono nombre="luna" tam={20} /></span>
+              <div className="flex flex-col gap-1 text-nota">
+                <p className="font-bold">Albergue nocturno «Abrigo Vecinal» (Oaxaca de Juárez)</p>
+                <p className="text-tinta-suave">Para personas en situación de calle en temporada de frío, de 19:00 a 08:00. Lo opera el DIF Municipal; su dirección no es pública, llama para que te canalicen.</p>
+                <a href="tel:9514001149" className="self-start font-bold text-acento underline dark:text-acento-fuerte">951 400 1149</a>
+                <p className="text-mini text-tenue">Fuente: Ayuntamiento de Oaxaca de Juárez, feb-2026</p>
+              </div>
+            </div>
+          )}
           {!verAlbergues && <p className="tarjeta p-4 text-tenue">Activa la capa «Albergues» para ver la lista.</p>}
           {!albergues.cargando && lista.length === 0 && (
             <p className="tarjeta p-4 text-tenue">No hay albergues registrados {todoOaxaca ? 'en Oaxaca' : `en ${region}`} todavía.</p>

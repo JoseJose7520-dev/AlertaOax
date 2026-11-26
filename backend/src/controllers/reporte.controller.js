@@ -2,7 +2,8 @@ import ErrorHttp from '../utils/ErrorHttp.js'
 import { errorDescripcionReporte } from '../utils/validaciones.js'
 import { buscarPorId } from '../models/usuario.model.js'
 import { buscarRegionPorNombre } from '../models/region.model.js'
-import { actualizarEstado, buscarReporte, crearReporte, listarDeUsuario, listarParaAutoridad } from '../models/reporte.model.js'
+import { actualizarEstado, buscarReporte, crearReporte, listarDeUsuario, listarParaAutoridad, listarParaExportar } from '../models/reporte.model.js'
+import { generarCsv } from '../utils/csv.js'
 
 export const TIPOS_REPORTE = ['inundacion', 'deslave', 'arbol', 'cable', 'vivienda', 'otro']
 export const ESTADOS = ['recibido', 'en_atencion', 'atendido']
@@ -47,16 +48,48 @@ export async function mios(req, res) {
   res.json({ reportes: await listarDeUsuario(req.usuario.id) })
 }
 
-/** GET /api/reports?estado=recibido   (autoridad: los de su región; administrador: todos) */
-export async function paraAutoridad(req, res) {
+/** Filtro común de la lista y la descarga: estado opcional y, para la autoridad, solo su región. */
+async function filtroAutoridad(req) {
   const estado = texto(req.query.estado)
-  if (estado && !ESTADOS.includes(estado)) throw new ErrorHttp(400, 'Estado inválido.')
+  // «abiertos» = recibidos + en atención (la tarjeta «Reportes abiertos» del resumen del administrador)
+  if (estado && estado !== 'abiertos' && !ESTADOS.includes(estado)) throw new ErrorHttp(400, 'Estado inválido.')
   let regionId = null
   if (req.usuario.rol === 'autoridad') {
     const usuario = await buscarPorId(req.usuario.id)
     regionId = (await buscarRegionPorNombre(usuario?.region ?? ''))?.id ?? -1
   }
-  res.json({ reportes: await listarParaAutoridad(regionId, estado || null) })
+  return { regionId, estado: estado || null }
+}
+
+/** GET /api/reports?estado=recibido|en_atencion|atendido|abiertos   (autoridad: los de su región; administrador: todos) */
+export async function paraAutoridad(req, res) {
+  const { regionId, estado } = await filtroAutoridad(req)
+  res.json({ reportes: await listarParaAutoridad(regionId, estado) })
+}
+
+const NOMBRE_TIPO = { inundacion: 'Inundación', deslave: 'Deslave', arbol: 'Árbol caído', cable: 'Cable caído', vivienda: 'Vivienda dañada', otro: 'Otro' }
+const NOMBRE_ESTADO = { recibido: 'Recibido', en_atencion: 'En atención', atendido: 'Atendido' }
+// «2026-11-25 20:02» en hora de Oaxaca: Excel la reconoce como fecha y se puede ordenar
+const fechaMx = (d) => (d ? new Date(d).toLocaleString('sv-SE', { timeZone: 'America/Mexico_City', dateStyle: 'short', timeStyle: 'short' }) : '')
+
+/**
+ * GET /api/reports/export?estado=recibido   (autoridad: su región; administrador: todas)
+ * Descarga los reportes en CSV (UTF-8 con BOM para que Excel lea bien los acentos).
+ */
+export async function exportarCsv(req, res) {
+  const { regionId, estado } = await filtroAutoridad(req)
+  const reportes = await listarParaExportar(regionId, estado)
+  const csv = generarCsv(
+    ['Folio', 'Tipo', 'Descripción', 'Referencia', 'Latitud', 'Longitud', 'Región', 'Estado', 'Nota de la autoridad', 'Recibido', 'Última actualización'],
+    reportes.map((r) => [
+      r.id, NOMBRE_TIPO[r.tipo] ?? r.tipo, r.descripcion, r.referencia, r.latitud, r.longitud, r.region,
+      NOMBRE_ESTADO[r.estado] ?? r.estado, r.nota_autoridad, fechaMx(r.creado_en), fechaMx(r.actualizado_en),
+    ]),
+  )
+  const fecha = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' }) // AAAA-MM-DD
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8')
+  res.setHeader('Content-Disposition', `attachment; filename="reportes-alertaoax-${fecha}${estado ? `-${estado}` : ''}.csv"`)
+  res.send(csv)
 }
 
 /** PATCH /api/reports/:id/estado   (autoridad de esa región o administrador)  Body: { estado, nota? } */

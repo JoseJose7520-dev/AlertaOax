@@ -214,3 +214,51 @@ ALTER TABLE zonas_riesgo ADD COLUMN IF NOT EXISTS es_ejemplo BOOLEAN NOT NULL DE
 UPDATE usuarios u SET rol = 'ciudadano'
 FROM autoridades a
 WHERE a.usuario_id = u.id AND u.rol = 'autoridad' AND a.estado_validacion <> 'aprobada';
+
+-- ============================================================
+-- AO-425: eliminar mi cuenta (derechos ARCO)
+-- ============================================================
+-- Al borrar una cuenta, sus reportes se conservan sin dueño para no perder el historial de Protección Civil.
+ALTER TABLE reportes ALTER COLUMN usuario_id DROP NOT NULL;
+ALTER TABLE reportes DROP CONSTRAINT IF EXISTS reportes_usuario_id_fkey;
+ALTER TABLE reportes ADD CONSTRAINT reportes_usuario_id_fkey
+  FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE SET NULL;
+-- Quién atendió un reporte o validó una autoridad: si esa cuenta se borra, el dato queda vacío
+ALTER TABLE reportes DROP CONSTRAINT IF EXISTS reportes_atendido_por_fkey;
+ALTER TABLE reportes ADD CONSTRAINT reportes_atendido_por_fkey
+  FOREIGN KEY (atendido_por) REFERENCES usuarios (id) ON DELETE SET NULL;
+ALTER TABLE autoridades DROP CONSTRAINT IF EXISTS autoridades_validada_por_fkey;
+ALTER TABLE autoridades ADD CONSTRAINT autoridades_validada_por_fkey
+  FOREIGN KEY (validada_por) REFERENCES usuarios (id) ON DELETE SET NULL;
+
+-- ============================================================
+-- AO-431: varios planes familiares por cuenta (ver, editar y eliminar)
+-- ============================================================
+-- Cada persona puede tener varios planes (p. ej. «Casa», «Trabajo de mamá», «Casa de los abuelos»).
+-- La mochila sigue en planes_familiares (una por cuenta).
+CREATE TABLE IF NOT EXISTS planes (
+  id                SERIAL PRIMARY KEY,
+  usuario_id        INTEGER      NOT NULL REFERENCES usuarios (id) ON DELETE CASCADE,
+  nombre            VARCHAR(60)  NOT NULL,
+  punto_reunion     VARCHAR(250) NOT NULL,
+  albergue_id       INTEGER      REFERENCES albergues (id) ON DELETE SET NULL,
+  contacto_externo  VARCHAR(160) NOT NULL,
+  necesidades       VARCHAR(500),
+  creado_en         TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  actualizado_en    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_planes_usuario ON planes (usuario_id);
+
+-- El plan único que ya existía pasa a la tabla nueva como «Mi familia» (una sola vez por cuenta)
+ALTER TABLE planes_familiares ADD COLUMN IF NOT EXISTS migrado BOOLEAN NOT NULL DEFAULT FALSE;
+INSERT INTO planes (usuario_id, nombre, punto_reunion, albergue_id, contacto_externo, necesidades, creado_en, actualizado_en)
+SELECT p.usuario_id, 'Mi familia', p.punto_reunion, p.albergue_id, p.contacto_externo, p.necesidades, p.actualizado_en, p.actualizado_en
+FROM planes_familiares p
+WHERE NOT p.migrado AND p.punto_reunion IS NOT NULL AND p.contacto_externo IS NOT NULL;
+UPDATE planes_familiares SET migrado = TRUE WHERE NOT migrado;
+
+-- ============================================================
+-- AO-432: refugios reales de Valles Centrales
+-- ============================================================
+-- Historial del refugio: cuándo y por qué se habilitó (p. ej. «Se habilitó en abril de 2025 por un incendio»).
+ALTER TABLE albergues ADD COLUMN IF NOT EXISTS nota VARCHAR(300);

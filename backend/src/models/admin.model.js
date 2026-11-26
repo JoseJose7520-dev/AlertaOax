@@ -114,3 +114,18 @@ export async function listarUsuarios({ rol = null, buscar = '', pagina = 1, porP
   )
   return { usuarios: rows, total: total.rows[0].total, pagina, porPagina }
 }
+
+/**
+ * Activa o desactiva una cuenta. Al desactivarla también se cierran sus sesiones abiertas
+ * (verificarToken ya revisa `activo` en cada petición; `sesiones_desde` invalida los tokens viejos).
+ * Devuelve { id, nombre, rol, activo } o null si no existe.
+ */
+export async function cambiarActivo(usuarioId, activo) {
+  const { rows } = await consulta(
+    `UPDATE usuarios SET activo = $2, sesiones_desde = CASE WHEN $2 THEN sesiones_desde ELSE NOW() END
+     WHERE id = $1
+     RETURNING id, nombre, rol, activo`,
+    [usuarioId, activo],
+  )
+  return rows[0] ?? null
+}

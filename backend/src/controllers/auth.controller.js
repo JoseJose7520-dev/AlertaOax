@@ -5,7 +5,8 @@ import ErrorHttp from '../utils/ErrorHttp.js'
 import crypto from 'node:crypto'
 import {
   actualizarPerfil, borrarSinVerificar, buscarPorCorreo, buscarPorGoogle, buscarPorId, cambiarPassword,
-  crearUsuario, marcarCorreoVerificado, vincularGoogle, cambiarAvisosCorreo, guardarSolicitudAutoridad } from '../models/usuario.model.js'
+  crearUsuario, marcarCorreoVerificado, vincularGoogle, cambiarAvisosCorreo, guardarSolicitudAutoridad,
+  contarAlertasPublicadas, eliminarCuenta } from '../models/usuario.model.js'
 import { buscarRegionPorNombre } from '../models/region.model.js'
 import { crearRecuperacion, usarRecuperacion } from '../models/recuperacion.model.js'
 import { comprobarCodigo, guardarCodigo, segundosDesdeEnvio } from '../models/verificacion.model.js'
@@ -373,4 +374,35 @@ export async function solicitarAutoridad(req, res) {
     mensaje: `Enviamos tu solicitud para ser autoridad en ${usuario.region}. Te avisaremos por correo cuando el administrador la revise.`,
     usuario: datosPublicos(await buscarPorId(req.usuario.id)),
   })
+}
+
+/** Palabra que escribe quien no tiene contraseña (cuenta de Google) para confirmar que quiere borrar su cuenta. */
+export const PALABRA_ELIMINAR = 'ELIMINAR'
+
+/**
+ * DELETE /api/auth/cuenta   Body: { password }  (o { confirmacion: 'ELIMINAR' } si la cuenta es de Google y no tiene contraseña)
+ * Cancelación de datos (derechos ARCO). El administrador no puede borrarse por aquí, y una autoridad
+ * que ya publicó alertas oficiales tampoco: esas alertas son historial público y se pide al administrador desactivarla.
+ */
+export async function eliminarMiCuenta(req, res) {
+  const usuario = await buscarPorId(req.usuario.id)
+  if (!usuario || !usuario.activo) throw new ErrorHttp(401, 'La cuenta ya no está disponible.')
+  if (usuario.rol === 'administrador') {
+    throw new ErrorHttp(403, 'La cuenta de administrador no se puede eliminar desde aquí. Pide a otro administrador que la dé de baja.')
+  }
+
+  const { password, confirmacion } = req.body ?? {}
+  if (usuario.password_definida) {
+    if (typeof password !== 'string' || !password) throw new ErrorHttp(400, 'Escribe tu contraseña para confirmar.')
+    if (!(await bcrypt.compare(password, usuario.password_hash))) throw new ErrorHttp(400, 'La contraseña no es correcta.')
+  } else if (texto(confirmacion).toUpperCase() !== PALABRA_ELIMINAR) {
+    throw new ErrorHttp(400, `Escribe ${PALABRA_ELIMINAR} para confirmar.`)
+  }
+
+  if (usuario.rol === 'autoridad' && (await contarAlertasPublicadas(usuario.id)) > 0) {
+    throw new ErrorHttp(409, 'Tu cuenta publicó alertas oficiales y deben quedar en el historial. Pide al administrador que desactive tu cuenta.')
+  }
+
+  await eliminarCuenta(usuario.id)
+  res.json({ cerrarSesion: true, mensaje: 'Tu cuenta y tus datos personales se eliminaron. Tus reportes se conservan sin tu nombre.' })
 }

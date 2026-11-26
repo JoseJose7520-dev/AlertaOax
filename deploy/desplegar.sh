@@ -29,7 +29,7 @@ paso "2/6 Backend: dependencias y migraciones de la base de datos"
 cd "$REPO/backend"
 npm ci --omit=dev --no-audit --no-fund
 npm run db:init
-npm run db:albergues --if-present
+npm run db:albergues --if-present -- --solo-reales
 
 paso "3/6 Reiniciando la API con PM2 ($APP)"
 pm2 restart "$APP" --update-env

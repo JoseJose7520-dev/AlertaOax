@@ -16,7 +16,7 @@ export const DOCUMENTOS = [
       ['Ubicación GPS: uso exclusivo', 'Tu ubicación se pide solo cuando tú tocas “Mi ubicación” o “Usar mi ubicación”, y se usa exclusivamente para mostrarte albergues cercanos y para ubicar los incidentes que reportas. No rastreamos tu ubicación en segundo plano ni guardamos tu historial de movimientos.'],
       ['Región y notificaciones', 'Tu región sirve para enviarte únicamente las alertas que te corresponden.'],
       ['Almacenamiento en tu navegador', 'Usamos almacenamiento local solo para lo esencial: mantener tu sesión, recordar el tema claro/oscuro y tu elección sobre cookies. No usamos cookies de publicidad ni de rastreo de terceros.'],
-      ['Tus derechos (ARCO)', 'Puedes pedir acceso, corrección, cancelación u oposición al uso de tus datos escribiendo al equipo de AlertaOax. No vendemos ni compartimos tu información con terceros.'],
+      ['Tus derechos (ARCO)', 'Puedes pedir acceso, corrección, cancelación u oposición al uso de tus datos escribiendo al equipo de AlertaOax. Tus datos personales los corriges en «Mi perfil», y desde ahí mismo puedes eliminar tu cuenta: se borran tus datos, planes y notificaciones, y los reportes que enviaste se conservan sin tu nombre para el historial de Protección Civil. No vendemos ni compartimos tu información con terceros.'],
     ],
   },
   {

@@ -1,16 +1,19 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useApi } from '../../hooks/useApi.js'
-import { api } from '../../services/api.js'
+import { api, descargarArchivo } from '../../services/api.js'
 import { ESTADOS_REPORTE, ICONO_TIPO, TIPOS_REPORTE, fechaCorta } from '../../utils/catalogos.js'
 import { enlaceRuta } from '../../utils/geo.js'
 import Aviso from '../../components/Aviso.jsx'
 import Cargando from '../../components/Cargando.jsx'
+import Confirmar from '../../components/Confirmar.jsx'
 import Encabezado, { Filtros } from '../../components/Encabezado.jsx'
 import Icono from '../../components/Icono.jsx'
 import SeguimientoReporte from '../../components/SeguimientoReporte.jsx'
 
 const FILTROS = [
   { valor: '', texto: 'Todos' },
+  { valor: 'abiertos', texto: 'Abiertos' },
   { valor: 'recibido', texto: 'Recibidos' },
   { valor: 'en_atencion', texto: 'En atención' },
   { valor: 'atendido', texto: 'Atendidos' },
@@ -22,6 +25,9 @@ function Reporte({ reporte, alActualizar }) {
   const [error, setError] = useState('')
   const e = ESTADOS_REPORTE[reporte.estado]
   const siguiente = reporte.estado === 'recibido' ? 'en_atencion' : reporte.estado === 'en_atencion' ? 'atendido' : null
+  // Para corregir un error: «Atendido» regresa a «En atención» y «En atención» regresa a «Recibido»
+  const anterior = reporte.estado === 'atendido' ? 'en_atencion' : reporte.estado === 'en_atencion' ? 'recibido' : null
+  const [regresando, setRegresando] = useState(false)
 
   async function cambiar(estado) {
     setEnviando(true)
@@ -29,7 +35,10 @@ function Reporte({ reporte, alActualizar }) {
     try {
       await api.patch(`/reports/${reporte.id}/estado`, { estado, nota: nota.trim() || undefined })
       setNota('')
-      alActualizar()
+      setRegresando(false)
+      alActualizar(estado === anterior
+        ? `Reporte #${reporte.id} regresó a «${ESTADOS_REPORTE[estado].nombre}».`
+        : `Reporte #${reporte.id} marcado como «${ESTADOS_REPORTE[estado].nombre}».`)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -76,25 +85,77 @@ function Reporte({ reporte, alActualizar }) {
           </button>
         </div>
       )}
+      {anterior && (
+        <button type="button" disabled={enviando} onClick={() => { setError(''); setRegresando(true) }}
+          className="inline-flex min-h-11 items-center gap-2 self-start rounded-xl px-2 text-nota font-bold text-tenue hover:bg-hundido hover:text-tinta">
+          <Icono nombre="regresar" tam={18} /> Regresar a «{ESTADOS_REPORTE[anterior].nombre}»
+        </button>
+      )}
       <Aviso tipo="error">{error}</Aviso>
+      {anterior && (
+        <Confirmar
+          abierto={regresando}
+          titulo={`¿Regresar el reporte #${reporte.id} a «${ESTADOS_REPORTE[anterior].nombre}»?`}
+          icono="regresar"
+          textoConfirmar="Sí, regresar"
+          textoCancelar="Cancelar"
+          enviando={enviando}
+          onConfirmar={() => cambiar(anterior)}
+          onCancelar={() => setRegresando(false)}
+        >
+          <p>Úsalo si lo marcaste por error o si el problema volvió. El ciudadano verá el estado <strong>{ESTADOS_REPORTE[anterior].nombre}</strong> en «Mis reportes».</p>
+          <label className="etiqueta text-nota">
+            Nota para el ciudadano (opcional)
+            <input className="campo min-h-11 font-normal" maxLength={500} placeholder="Ej. Lo marcamos por error; seguimos atendiendo"
+              value={nota} onChange={(ev) => setNota(ev.target.value)} />
+          </label>
+          <Aviso tipo="error">{error}</Aviso>
+        </Confirmar>
+      )}
     </article>
   )
 }
 
 export default function ReportesCiudadanos() {
-  const [filtro, setFiltro] = useState('')
+  // ?estado=abiertos (desde el resumen del administrador) abre la lista ya filtrada
+  const [params] = useSearchParams()
+  const [filtro, setFiltro] = useState(() => (FILTROS.some((f) => f.valor === params.get('estado')) ? params.get('estado') : ''))
+  const [exito, setExito] = useState('')
   const { datos, cargando, error, recargar } = useApi(`/reports${filtro ? `?estado=${filtro}` : ''}`)
+  const [descargando, setDescargando] = useState(false)
+  const [errorCsv, setErrorCsv] = useState('')
+
+  // AO-423: Protección Civil descarga los reportes (con el mismo filtro de estado) para darles seguimiento en Excel
+  async function descargarCsv() {
+    setDescargando(true); setErrorCsv('')
+    try {
+      const hoy = new Date().toLocaleDateString('en-CA') // AAAA-MM-DD
+      await descargarArchivo(`/reports/export${filtro ? `?estado=${filtro}` : ''}`, `reportes-alertaoax-${hoy}${filtro ? `-${filtro}` : ''}.csv`)
+    } catch (err) {
+      setErrorCsv(err.message)
+    } finally {
+      setDescargando(false)
+    }
+  }
 
   return (
     <section className="flex max-w-3xl flex-col gap-4">
       <Encabezado rotulo="Panel de autoridad" titulo="Reportes ciudadanos" icono="reporte">
         Incidentes que reportó la población de tu región. Deja una nota para que sepan qué se está haciendo.
       </Encabezado>
-      <Filtros etiqueta="Filtrar por estado" valor={filtro} onCambio={setFiltro} opciones={FILTROS.map((f) => [f.valor, f.texto])} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Filtros etiqueta="Filtrar por estado" valor={filtro} onCambio={(v) => { setFiltro(v); setExito('') }} opciones={FILTROS.map((f) => [f.valor, f.texto])} />
+        <button type="button" onClick={descargarCsv} disabled={descargando || !datos?.reportes.length} className="btn-neutro min-h-11 text-texto"
+          title={datos?.reportes.length ? 'Descarga los reportes de este filtro para abrirlos en Excel' : 'No hay reportes para descargar'}>
+          <Icono nombre="descargar" tam={20} /> {descargando ? 'Descargando…' : 'Descargar CSV'}
+        </button>
+      </div>
+      <Aviso tipo="error">{errorCsv}</Aviso>
+      <Aviso tipo="exito">{exito}</Aviso>
       {cargando && <Cargando />}
       <Aviso tipo="error">{error}</Aviso>
       {datos?.reportes.length === 0 && <p className="text-tenue">No hay reportes con este filtro.</p>}
-      {datos?.reportes.map((r) => <Reporte key={r.id} reporte={r} alActualizar={recargar} />)}
+      {datos?.reportes.map((r) => <Reporte key={r.id} reporte={r} alActualizar={(m) => { setExito(m); recargar() }} />)}
     </section>
   )
 }

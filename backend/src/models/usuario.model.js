@@ -102,3 +102,33 @@ export async function guardarSolicitudAutoridad(usuarioId, institucion) {
 export async function cambiarAvisosCorreo(id, activo) {
   await consulta('UPDATE usuarios SET avisos_correo = $2 WHERE id = $1', [id, activo])
 }
+
+/** Cuántas alertas publicó la cuenta (las alertas oficiales no se borran con la cuenta). */
+export async function contarAlertasPublicadas(id) {
+  const { rows } = await consulta('SELECT COUNT(*)::int AS total FROM alertas WHERE autoridad_id = $1', [id])
+  return rows[0].total
+}
+
+/**
+ * Borra la cuenta y sus datos personales en una transacción.
+ * En cascada se van: plan familiar y planes, mochila, notificaciones, códigos, enlaces de recuperación y solicitud de autoridad.
+ * Los reportes quedan sin dueño (usuario_id NULL) para conservar el historial de Protección Civil.
+ */
+export async function eliminarCuenta(id) {
+  const cliente = await pool.connect()
+  try {
+    await cliente.query('BEGIN')
+    // Por si la base aún no tiene la migración AO-425 (ON DELETE SET NULL), se anonimiza a mano
+    await cliente.query('UPDATE reportes SET usuario_id = NULL WHERE usuario_id = $1', [id])
+    await cliente.query('UPDATE reportes SET atendido_por = NULL WHERE atendido_por = $1', [id])
+    await cliente.query('UPDATE autoridades SET validada_por = NULL WHERE validada_por = $1', [id])
+    const { rowCount } = await cliente.query("DELETE FROM usuarios WHERE id = $1 AND rol <> 'administrador'", [id])
+    await cliente.query('COMMIT')
+    return rowCount > 0
+  } catch (err) {
+    await cliente.query('ROLLBACK')
+    throw err
+  } finally {
+    cliente.release()
+  }
+}
